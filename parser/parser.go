@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/KazumaTakata/Static-Typed-Language/lexer"
 	"github.com/KazumaTakata/regex_virtualmachine"
+	"github.com/KazumaTakata/static-typed-language/lexer"
 	"strconv"
 	"strings"
 )
