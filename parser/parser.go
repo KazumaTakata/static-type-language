@@ -1,11 +1,9 @@
-package main
+package parser
 
 import (
 	"fmt"
-	"github.com/KazumaTakata/regex_virtualmachine"
 	"github.com/KazumaTakata/static-typed-language/lexer"
 	"strconv"
-	"strings"
 )
 
 type FactorOp int
@@ -16,6 +14,21 @@ const (
 	FNONE FactorOp = 2
 )
 
+func (e FactorOp) String() string {
+
+	switch e {
+	case MUL:
+		return "MUL"
+	case DIV:
+		return "DIV"
+	case FNONE:
+		return "FNONE"
+
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
 type TermOp int
 
 const (
@@ -24,39 +37,65 @@ const (
 	TNONE TermOp = 2
 )
 
+func (e TermOp) String() string {
+
+	switch e {
+	case ADD:
+		return "ADD"
+	case SUB:
+		return "SUB"
+	case TNONE:
+		return "TNONE"
+
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
 type Arith_expr struct {
-	terms []ArithElement
+	Terms []ArithElement
 }
 
 type ArithElement struct {
-	term Term
-	op   TermOp
+	Term Term
+	Op   TermOp
 }
 
 type Term struct {
-	factors []TermElement
+	Factors []TermElement
 }
 
 type TermElement struct {
-	factor Factor
-	op     FactorOp
+	Factor Factor
+	Op     FactorOp
 }
 
 type Factor struct {
-	Number int
+	Int    int
+	Float  float64
+	String string
+	Type   lexer.TokenType
 }
 
 type Parser_Input struct {
-	tokens []lexer.Token
-	pos    int
+	Tokens []lexer.Token
+	Pos    int
 }
 
 func (p *Parser_Input) eat(token lexer.Token) {
 	if p.peek() == token {
-		p.pos = p.pos + 1
+		p.Pos = p.Pos + 1
 	} else {
 		fmt.Errorf("eat is not match:got %+v, expected %+v", token, p.peek())
 	}
+
+}
+
+func (p *Parser_Input) empty() bool {
+	if len(p.Tokens)-1 < p.Pos {
+		return true
+	}
+	return false
 
 }
 
@@ -68,14 +107,15 @@ func (p *Parser_Input) next() lexer.Token {
 }
 
 func (p *Parser_Input) peek() lexer.Token {
-	return p.tokens[p.pos]
+	return p.Tokens[p.Pos]
 }
-func parse_Arith_expr(tokens *Parser_Input) Arith_expr {
+func Parse_Arith_expr(tokens *Parser_Input) Arith_expr {
+
 	terms := []ArithElement{}
 	term := parse_Term(tokens)
-	terms = append(terms, ArithElement{term: term, op: TNONE})
+	terms = append(terms, ArithElement{Term: term, Op: TNONE})
 
-	for tokens.peek().Type == lexer.ADD || tokens.peek().Type == lexer.SUB {
+	for !tokens.empty() && (tokens.peek().Type == lexer.ADD || tokens.peek().Type == lexer.SUB) {
 		op := tokens.next()
 		var top TermOp
 		switch op.Type {
@@ -83,7 +123,7 @@ func parse_Arith_expr(tokens *Parser_Input) Arith_expr {
 			{
 				top = ADD
 			}
-		case lexer.DIV:
+		case lexer.SUB:
 			{
 				top = SUB
 			}
@@ -95,19 +135,19 @@ func parse_Arith_expr(tokens *Parser_Input) Arith_expr {
 		}
 
 		term := parse_Term(tokens)
-		terms = append(terms, ArithElement{term: term, op: top})
+		terms = append(terms, ArithElement{Term: term, Op: top})
 
 	}
 
-	return Arith_expr{terms: terms}
+	return Arith_expr{Terms: terms}
 }
 
 func parse_Term(tokens *Parser_Input) Term {
 	factors := []TermElement{}
 	factor := parse_Factor(tokens)
-	factors = append(factors, TermElement{factor: factor, op: FNONE})
+	factors = append(factors, TermElement{Factor: factor, Op: FNONE})
 
-	for tokens.peek().Type == lexer.MUL || tokens.peek().Type == lexer.DIV {
+	for !tokens.empty() && (tokens.peek().Type == lexer.MUL || tokens.peek().Type == lexer.DIV) {
 		op := tokens.next()
 		var fop FactorOp
 		switch op.Type {
@@ -127,46 +167,35 @@ func parse_Term(tokens *Parser_Input) Term {
 		}
 
 		factor := parse_Factor(tokens)
-		factors = append(factors, TermElement{factor: factor, op: fop})
+		factors = append(factors, TermElement{Factor: factor, Op: fop})
 
 	}
 
-	return Term{factors: factors}
+	return Term{Factors: factors}
 }
 
 func parse_Factor(tokens *Parser_Input) Factor {
 
-	if tokens.peek().Type == lexer.NUMBER {
-		number_token := tokens.next()
-		number, _ := strconv.Atoi(number_token.Value)
-		return Factor{Number: number}
+	switch tokens.peek().Type {
+	case lexer.INT:
+		{
+			number_token := tokens.next()
+			number, _ := strconv.Atoi(number_token.Value)
+			return Factor{Int: number, Type: lexer.INT}
+		}
+	case lexer.DOUBLE:
+		{
+			number_token := tokens.next()
+			number, _ := strconv.ParseFloat(number_token.Value, 64)
+			return Factor{Float: number, Type: lexer.DOUBLE}
+		}
+	case lexer.STRING:
+		{
+			string_token := tokens.next()
+			return Factor{String: string_token.Value, Type: lexer.STRING}
+		}
+
 	}
 
 	return Factor{}
-}
-
-func main() {
-
-	lexer_rules := [][]string{}
-	lexer_rules = append(lexer_rules, []string{"NUMBER", "\\d+"})
-	lexer_rules = append(lexer_rules, []string{"ADD", "\\+"})
-	lexer_rules = append(lexer_rules, []string{"SUB", "\\-"})
-	lexer_rules = append(lexer_rules, []string{"MUL", "\\*"})
-	lexer_rules = append(lexer_rules, []string{"DIV", "\\/"})
-
-	regex_parts := []string{}
-
-	for _, rule := range lexer_rules {
-		regex_parts = append(regex_parts, fmt.Sprintf("(?<%s>%s)", rule[0], rule[1]))
-	}
-
-	regex_string := strings.Join(regex_parts, "|")
-	//fmt.Printf("%s", regex_string)
-
-	regex := regex.NewRegexWithParser(regex_string)
-
-	tokens := lexer.GetTokens(regex, "13*33-35")
-
-	fmt.Printf("%+v", tokens)
-
 }

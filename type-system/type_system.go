@@ -1,13 +1,29 @@
-package lexer
+package main
 
 import (
 	"fmt"
 	"github.com/KazumaTakata/regex_virtualmachine"
+	"github.com/KazumaTakata/static-typed-language/lexer"
+	"github.com/KazumaTakata/static-typed-language/parser"
 	"strings"
-	"testing"
 )
 
-func TestLexer(t *testing.T) {
+type Type int
+
+const (
+	Int    Type = 0
+	Double Type = 1
+)
+
+func Type_Check_Arith_Term(term1 parser.Term, term2 parser.Term) {
+
+}
+
+func Type_Check_Arith_Factor(factor1 parser.Factor, factor2 parser.Factor) {
+
+}
+
+func main() {
 
 	lexer_rules := [][]string{}
 	lexer_rules = append(lexer_rules, []string{"DOUBLE", "\\d+\\.\\d*"})
@@ -29,12 +45,17 @@ func TestLexer(t *testing.T) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	tokens := GetTokens(regex, "3+13.0")
+	input := "13.3+33"
+	fmt.Printf("%s\n", input)
 
-	fmt.Printf("%+v", tokens)
+	tokens := lexer.GetTokens(regex, input)
 
-	tokens = GetTokens(regex, "\"stringdata\"")
+	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
 
-	fmt.Printf("%+v", tokens)
+	//fmt.Printf("%+v", tokens)
+
+	arith_expr := parser.Parse_Arith_expr(&parser_input)
+
+	fmt.Printf("%+v", arith_expr)
 
 }

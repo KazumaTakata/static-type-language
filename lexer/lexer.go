@@ -8,18 +8,25 @@ import (
 type TokenType int
 
 const (
-	NUMBER TokenType = 0
-	ADD    TokenType = 1
-	SUB    TokenType = 2
-	MUL    TokenType = 3
-	DIV    TokenType = 4
+	INT TokenType = iota + 1
+	DOUBLE
+	STRING
+	ADD
+	SUB
+	MUL
+	DIV
 )
 
 func (e TokenType) String() string {
 
 	switch e {
-	case NUMBER:
-		return "NUMBER"
+	case INT:
+		return "INT"
+	case DOUBLE:
+		return "DOUBLE"
+	case STRING:
+		return "STRING"
+
 	case ADD:
 		return "ADD"
 	case SUB:
@@ -35,7 +42,9 @@ func (e TokenType) String() string {
 }
 
 var tokenmap map[string]TokenType = map[string]TokenType{
-	"NUMBER": NUMBER,
+	"INT":    INT,
+	"STRING": STRING,
+	"DOUBLE": DOUBLE,
 	"ADD":    ADD,
 	"SUB":    SUB,
 	"MUL":    MUL,
