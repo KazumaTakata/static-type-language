@@ -76,16 +76,38 @@ func GetNextToken(regex regex.Regex, input string) (Token, string) {
 
 	matched_string := input[group_range.Begin:group_range.End]
 
+	if name == "STRING" {
+		matched_string = matched_string[1 : len(matched_string)-1]
+	}
+
 	token := Token{Type: tokenmap[name], Value: matched_string}
 	return token, input[group_range.End:]
 
 }
 
-func GetTokens(regex regex.Regex, input string) []Token {
+func eatSpace(regex regex.Regex, input string) string {
+
+	match_range, ifmatch, _ := regex.Match(input)
+
+	if !ifmatch {
+		input = input
+	} else {
+		input = input[match_range[1]:]
+	}
+
+	return input
+
+}
+
+func GetTokens(Regex regex.Regex, input string) []Token {
+
+	white_space_regex := regex.NewRegexWithParser("(\\s+)")
+	input = eatSpace(white_space_regex, input)
+
 	tokens := []Token{}
 	for len(input) > 0 {
-		token, next_input := GetNextToken(regex, input)
-		input = next_input
+		token, next_input := GetNextToken(Regex, input)
+		input = eatSpace(white_space_regex, next_input)
 		tokens = append(tokens, token)
 	}
 	return tokens

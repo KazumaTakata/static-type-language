@@ -29,11 +29,11 @@ func TestLexer(t *testing.T) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	tokens := GetTokens(regex, "3+13.0")
+	tokens := GetTokens(regex, "  3 + 13.0  ")
 
 	fmt.Printf("%+v", tokens)
 
-	tokens = GetTokens(regex, "\"stringdata\"")
+	tokens = GetTokens(regex, "  \"stringdata\"   ")
 
 	fmt.Printf("%+v", tokens)
 
