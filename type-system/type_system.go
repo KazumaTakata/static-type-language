@@ -5,21 +5,110 @@ import (
 	"github.com/KazumaTakata/regex_virtualmachine"
 	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/parser"
+	"os"
 	"strings"
 )
 
 type Type int
 
 const (
-	Int    Type = 0
-	Double Type = 1
+	INT Type = iota + 1
+	DOUBLE
+	STRING
 )
 
-func Type_Check_Arith_Term(term1 parser.Term, term2 parser.Term) {
+func (e Type) String() string {
+
+	switch e {
+	case INT:
+		return "INT"
+	case DOUBLE:
+		return "DOUBLE"
+	case STRING:
+		return "STRING"
+
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
+var lexerTypeToType = map[lexer.TokenType]Type{lexer.INT: INT, lexer.DOUBLE: DOUBLE}
+var NumberType = map[Type]bool{INT: true, DOUBLE: true}
+
+func Type_Check_Arith_Factor(factor1_type Type, factor2_type Type, op parser.FactorOp) Type {
+
+	is_factor1_number := false
+	is_factor2_number := false
+
+	if _, ok := NumberType[factor1_type]; ok {
+		is_factor1_number = true
+	}
+
+	if _, ok := NumberType[factor2_type]; ok {
+		is_factor2_number = true
+	}
+
+	if is_factor1_number && is_factor2_number {
+		if factor1_type < factor2_type {
+			return factor2_type
+		} else {
+			return factor1_type
+		}
+	} else if is_factor1_number && !is_factor2_number {
+
+		fmt.Printf("\ntype mismatch: %+v can not be %ved with %v\n", factor1_type, op, factor2_type)
+		os.Exit(1)
+	} else if !is_factor1_number && is_factor2_number {
+		fmt.Printf("\ntype mismatch: %+v can not be %ved with %v\n", factor1_type, op, factor2_type)
+		os.Exit(1)
+	} else {
+		fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", factor1_type, op, factor2_type)
+		os.Exit(1)
+
+	}
+
+	return INT
 
 }
 
-func Type_Check_Arith_Factor(factor1 parser.Factor, factor2 parser.Factor) {
+func Type_Check_Arith_Term(term1_type Type, term2_type Type, op parser.TermOp) Type {
+
+	is_factor1_number := false
+	is_factor2_number := false
+
+	if _, ok := NumberType[term1_type]; ok {
+		is_factor1_number = true
+	}
+
+	if _, ok := NumberType[term2_type]; ok {
+		is_factor2_number = true
+	}
+
+	if is_factor1_number && is_factor2_number {
+		if term1_type < term2_type {
+			return term2_type
+		} else {
+			return term1_type
+		}
+	} else if is_factor1_number && !is_factor2_number {
+
+		fmt.Printf("\ntype mismatch: %+v can not be %ved with %v\n", term1_type, op, term2_type)
+		os.Exit(1)
+	} else if !is_factor1_number && is_factor2_number {
+		fmt.Printf("\ntype mismatch: %+v can not be %ved with %v\n", term1_type, op, term2_type)
+		os.Exit(1)
+	} else {
+
+		if term1_type == term2_type && term1_type == STRING && op == parser.ADD {
+			return STRING
+		} else {
+			fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", term1_type, op, term2_type)
+			os.Exit(1)
+		}
+
+	}
+
+	return INT
 
 }
 
@@ -45,7 +134,7 @@ func main() {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	input := "13.3+33"
+	input := "13+\"hello\""
 	fmt.Printf("%s\n", input)
 
 	tokens := lexer.GetTokens(regex, input)
@@ -57,5 +146,10 @@ func main() {
 	arith_expr := parser.Parse_Arith_expr(&parser_input)
 
 	fmt.Printf("%+v", arith_expr)
+
+	_ = Type_Check_Arith_Factor(STRING, INT, parser.MUL)
+
+	factorType := Type_Check_Arith_Term(STRING, INT, parser.ADD)
+	fmt.Printf("%+v\n", factorType)
 
 }
