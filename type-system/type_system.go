@@ -1,41 +1,17 @@
-package main
+package type_checker
 
 import (
 	"fmt"
-	"github.com/KazumaTakata/regex_virtualmachine"
 	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/parser"
+	"github.com/KazumaTakata/static-typed-language/type"
 	"os"
-	"strings"
 )
 
-type Type int
+var lexerTypeToType = map[lexer.TokenType]basic_type.Type{lexer.INT: basic_type.INT, lexer.DOUBLE: basic_type.DOUBLE, lexer.STRING: basic_type.STRING}
+var NumberType = map[basic_type.Type]bool{basic_type.INT: true, basic_type.DOUBLE: true}
 
-const (
-	INT Type = iota + 1
-	DOUBLE
-	STRING
-)
-
-func (e Type) String() string {
-
-	switch e {
-	case INT:
-		return "INT"
-	case DOUBLE:
-		return "DOUBLE"
-	case STRING:
-		return "STRING"
-
-	default:
-		return fmt.Sprintf("%d", int(e))
-	}
-}
-
-var lexerTypeToType = map[lexer.TokenType]Type{lexer.INT: INT, lexer.DOUBLE: DOUBLE}
-var NumberType = map[Type]bool{INT: true, DOUBLE: true}
-
-func Type_Check_Arith_Factor(factor1_type Type, factor2_type Type, op parser.FactorOp) Type {
+func Type_Check_Arith_Factor(factor1_type basic_type.Type, factor2_type basic_type.Type, op parser.FactorOp) basic_type.Type {
 
 	is_factor1_number := false
 	is_factor2_number := false
@@ -67,11 +43,11 @@ func Type_Check_Arith_Factor(factor1_type Type, factor2_type Type, op parser.Fac
 
 	}
 
-	return INT
+	return basic_type.INT
 
 }
 
-func Type_Check_Arith_Term(term1_type Type, term2_type Type, op parser.TermOp) Type {
+func Type_Check_Arith_Term(term1_type basic_type.Type, term2_type basic_type.Type, op parser.TermOp) basic_type.Type {
 
 	is_factor1_number := false
 	is_factor2_number := false
@@ -99,8 +75,8 @@ func Type_Check_Arith_Term(term1_type Type, term2_type Type, op parser.TermOp) T
 		os.Exit(1)
 	} else {
 
-		if term1_type == term2_type && term1_type == STRING && op == parser.ADD {
-			return STRING
+		if term1_type == term2_type && term1_type == basic_type.STRING && op == parser.ADD {
+			return basic_type.STRING
 		} else {
 			fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", term1_type, op, term2_type)
 			os.Exit(1)
@@ -108,48 +84,67 @@ func Type_Check_Arith_Term(term1_type Type, term2_type Type, op parser.TermOp) T
 
 	}
 
-	return INT
+	return basic_type.INT
 
 }
 
-func main() {
+func get_Type_of_Factor(factor parser.Factor) basic_type.Type {
+	return lexerTypeToType[factor.Type]
+}
 
-	lexer_rules := [][]string{}
-	lexer_rules = append(lexer_rules, []string{"DOUBLE", "\\d+\\.\\d*"})
-	lexer_rules = append(lexer_rules, []string{"INT", "\\d+"})
-	lexer_rules = append(lexer_rules, []string{"STRING", "\"\\w*\""})
-	lexer_rules = append(lexer_rules, []string{"ADD", "\\+"})
-	lexer_rules = append(lexer_rules, []string{"SUB", "\\-"})
-	lexer_rules = append(lexer_rules, []string{"MUL", "\\*"})
-	lexer_rules = append(lexer_rules, []string{"DIV", "\\/"})
+func Type_Check_Arith(arith *parser.Arith_expr) basic_type.Type {
 
-	regex_parts := []string{}
+	arith.Type = Type_Check_Arith_Terms(arith.Terms)
 
-	for _, rule := range lexer_rules {
-		regex_parts = append(regex_parts, fmt.Sprintf("(?<%s>%s)", rule[0], rule[1]))
+	return arith.Type
+}
+
+func Type_Check_Arith_Terms(terms []parser.ArithElement) basic_type.Type {
+
+	if len(terms) == 1 {
+		return Type_Check_Arith_Factors(terms[0].Term.Factors)
 	}
 
-	regex_string := strings.Join(regex_parts, "|")
-	//fmt.Printf("%s", regex_string)
+	var operand1_type basic_type.Type
+	var operand2_type basic_type.Type
 
-	regex := regex.NewRegexWithParser(regex_string)
+	for i, term := range terms {
+		if i == 0 {
+			operand1_type = Type_Check_Arith_Factors(term.Term.Factors)
+			terms[i].Term.Type = operand1_type
+			continue
+		}
 
-	input := "13+\"hello\""
-	fmt.Printf("%s\n", input)
+		operand2_type = operand1_type
+		operand1_type = Type_Check_Arith_Factors(term.Term.Factors)
+		terms[i].Term.Type = operand1_type
 
-	tokens := lexer.GetTokens(regex, input)
+		operand1_type = Type_Check_Arith_Term(operand2_type, operand1_type, term.Op)
+	}
 
-	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
+	return operand1_type
 
-	//fmt.Printf("%+v", tokens)
+}
 
-	arith_expr := parser.Parse_Arith_expr(&parser_input)
+func Type_Check_Arith_Factors(factors []parser.TermElement) basic_type.Type {
 
-	fmt.Printf("%+v", arith_expr)
+	if len(factors) == 1 {
+		return get_Type_of_Factor(factors[0].Factor)
+	}
 
-	_ = Type_Check_Arith_Factor(STRING, INT, parser.MUL)
+	var operand1_type basic_type.Type
+	var operand2_type basic_type.Type
 
-	factorType := Type_Check_Arith_Term(STRING, INT, parser.ADD)
-	fmt.Printf("%+v\n", factorType)
+	for i, factor := range factors {
+		if i == 0 {
+			operand1_type = get_Type_of_Factor(factor.Factor)
+			continue
+		}
+
+		operand2_type = operand1_type
+		operand1_type = Type_Check_Arith_Factor(operand2_type, get_Type_of_Factor(factor.Factor), factor.Op)
+	}
+
+	return operand1_type
 
 }

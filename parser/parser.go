@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"github.com/KazumaTakata/static-typed-language/lexer"
+	"github.com/KazumaTakata/static-typed-language/type"
 	"strconv"
 )
 
@@ -54,6 +55,7 @@ func (e TermOp) String() string {
 
 type Arith_expr struct {
 	Terms []ArithElement
+	Type  basic_type.Type
 }
 
 type ArithElement struct {
@@ -63,6 +65,7 @@ type ArithElement struct {
 
 type Term struct {
 	Factors []TermElement
+	Type    basic_type.Type
 }
 
 type TermElement struct {
