@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/KazumaTakata/readline"
 	"github.com/KazumaTakata/regex_virtualmachine"
 	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/parser"
 	basic_type "github.com/KazumaTakata/static-typed-language/type"
 	type_checker "github.com/KazumaTakata/static-typed-language/type-system"
+	"os"
+	"strings"
 )
 
 func Arith_Factors_INT(factors []parser.TermElement) int {
@@ -39,6 +39,15 @@ func Arith_Factors_INT(factors []parser.TermElement) int {
 
 	}
 	return result
+}
+
+func Arith_Factors_STRING(factors []parser.TermElement) string {
+
+	if len(factors) == 1 {
+		return factors[0].Factor.String
+	}
+	os.Exit(1)
+	return ""
 }
 
 func Arith_Factors_DOUBLE(factors []parser.TermElement) float64 {
@@ -153,6 +162,36 @@ func Arith_Terms_DOUBLE(terms []parser.ArithElement) float64 {
 	return result
 }
 
+func Arith_Terms_STRING(terms []parser.ArithElement) string {
+
+	if len(terms) == 1 {
+		return Arith_Factors_STRING(terms[0].Term.Factors)
+	}
+
+	var result string
+
+	for i, term := range terms {
+		//		fmt.Printf("%+v\n", term)
+		if i == 0 {
+			result = Arith_Factors_STRING(term.Term.Factors)
+			continue
+		}
+		switch term.Op {
+		case parser.ADD:
+			{
+				result = result + Arith_Factors_STRING(term.Term.Factors)
+			}
+
+		case parser.SUB:
+			{
+
+			}
+		}
+
+	}
+	return result
+}
+
 func getClosure() func([]byte) {
 
 	lexer_rules := [][]string{}
@@ -188,6 +227,10 @@ func getClosure() func([]byte) {
 			fmt.Printf("%+v", result)
 		} else if resolved_type == basic_type.DOUBLE {
 			result := Arith_Terms_DOUBLE(arith_expr.Terms)
+			fmt.Printf("%+v", result)
+
+		} else if resolved_type == basic_type.STRING {
+			result := Arith_Terms_STRING(arith_expr.Terms)
 			fmt.Printf("%+v", result)
 
 		}
