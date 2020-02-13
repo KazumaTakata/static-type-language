@@ -15,14 +15,16 @@ func TestLexer(t *testing.T) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	string_input := "var x int  = 3 + 3"
+	string_input := "var x int  = 3 + 3\n var y string = x "
 
 	tokens := lexer.GetTokens(regex, string_input)
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
-	stmt := parser.Parse_Stmt(&parser_input)
+	stmts := parser.Parse_Stmts(&parser_input)
 
-	resolved_type, variable_type_map := Type_Check_Stmt(stmt)
+	variable_map := Variable_Table{}
 
-	fmt.Printf("%+v, %+v\n", resolved_type, variable_type_map)
+	Type_Check_Stmts(stmts, variable_map)
+
+	fmt.Printf("%+v\n", variable_map)
 
 }

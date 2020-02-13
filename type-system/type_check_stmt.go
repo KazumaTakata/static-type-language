@@ -21,13 +21,17 @@ type Type_Env struct {
 	Child_Env *Type_Env
 }
 
-func Type_Check_Stmt(stmt parser.Stmt) (basic_type.Type, Variable_Table) {
+func Type_Check_Stmts(stmts []parser.Stmt, variable_map Variable_Table) {
 
-	variable_map := Variable_Table{}
+	for _, stmt := range stmts {
+		Type_Check_Stmt(stmt, variable_map)
+	}
 
+}
+func Type_Check_Stmt(stmt parser.Stmt, variable_map Variable_Table) basic_type.Type {
 	if stmt.Type == parser.EXPR {
 		expr_type := Type_Check_Arith(stmt.Expr, variable_map)
-		return expr_type, variable_map
+		return expr_type
 	} else if stmt.Type == parser.DECL_STMT {
 		var_type := stmt.Decl.Type
 		expr_type := Type_Check_Arith(stmt.Decl.Expr, variable_map)
@@ -39,8 +43,8 @@ func Type_Check_Stmt(stmt parser.Stmt) (basic_type.Type, Variable_Table) {
 			os.Exit(1)
 		}
 
-		return var_type, variable_map
+		return var_type
 	}
 
-	return basic_type.INT, variable_map
+	return basic_type.INT
 }
