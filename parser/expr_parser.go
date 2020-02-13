@@ -132,7 +132,7 @@ func Parse_Cmp_expr(tokens *Parser_Input) Cmp_expr {
 	arith := Parse_Arith_expr(tokens)
 	ariths = append(ariths, CmpElement{Arith: arith, Op: ANONE})
 
-	for !tokens.empty() && tokens.peek().Type != lexer.NEWLINE && (tokens.peek().Type == lexer.EQUAL || tokens.peek().Type == lexer.NOTEQUAL) {
+	for !tokens.empty() && tokens.peek().Type != lexer.LCURL && tokens.peek().Type != lexer.NEWLINE && (tokens.peek().Type == lexer.EQUAL || tokens.peek().Type == lexer.NOTEQUAL) {
 		op := tokens.next()
 		var aop ArithOp
 		switch op.Type {
@@ -169,7 +169,7 @@ func Parse_Arith_expr(tokens *Parser_Input) Arith_expr {
 	term := parse_Term(tokens)
 	terms = append(terms, ArithElement{Term: term, Op: TNONE})
 
-	for !tokens.empty() && tokens.peek().Type != lexer.NEWLINE && (tokens.peek().Type == lexer.ADD || tokens.peek().Type == lexer.SUB) {
+	for !tokens.empty() && tokens.peek().Type != lexer.LCURL && tokens.peek().Type != lexer.NEWLINE && (tokens.peek().Type == lexer.ADD || tokens.peek().Type == lexer.SUB) {
 		op := tokens.next()
 		var top TermOp
 		switch op.Type {

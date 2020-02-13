@@ -10,6 +10,7 @@ type Stmt_Type int
 
 const (
 	DECL_STMT Stmt_Type = iota + 1
+	FOR_STMT
 	EXPR
 )
 
@@ -20,15 +21,24 @@ func (e Stmt_Type) String() string {
 		return "DECL_STMT"
 	case EXPR:
 		return "EXPR"
+	case FOR_STMT:
+		return "FOR_STMT"
+
 	default:
 		return fmt.Sprintf("%d", int(e))
 	}
+}
+
+type For_stmt struct {
+	Cmp_expr Cmp_expr
+	Stmts    []Stmt
 }
 
 type Stmt struct {
 	Type Stmt_Type
 	Decl *Decl_stmt
 	Expr *Arith_expr
+	For  *For_stmt
 }
 
 type Decl_stmt struct {
@@ -48,8 +58,9 @@ func eat_newline(tokens *Parser_Input) {
 func Parse_Stmts(tokens *Parser_Input) []Stmt {
 
 	stmts := []Stmt{}
+	_ = []lexer.TokenType{lexer.IDENT, lexer.INT, lexer.DOUBLE, lexer.STRING, lexer.VAR, lexer.FOR}
 
-	for !tokens.empty() {
+	for !tokens.empty() && (tokens.peek().Type == lexer.VAR || tokens.peek().Type == lexer.IDENT || tokens.peek().Type == lexer.INT || tokens.peek().Type == lexer.DOUBLE || tokens.peek().Type == lexer.STRING) {
 		eat_newline(tokens)
 
 		stmt := Parse_Stmt(tokens)
@@ -86,6 +97,18 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				expr := Parse_Arith_expr(tokens)
 				stmt.Expr = &expr
 				stmt.Type = EXPR
+			}
+		case lexer.FOR:
+			{
+				tokens.eat(lexer.FOR)
+				expr := Parse_Cmp_expr(tokens)
+				tokens.eat(lexer.LCURL)
+				stmts := Parse_Stmts(tokens)
+				tokens.eat(lexer.RCURL)
+				for_expr := For_stmt{Cmp_expr: expr, Stmts: stmts}
+				stmt.For = &for_expr
+				stmt.Type = FOR_STMT
+
 			}
 
 		}
