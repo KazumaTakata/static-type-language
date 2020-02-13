@@ -1,6 +1,9 @@
 package basic_type
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/KazumaTakata/static-typed-language/lexer"
+)
 
 type Type int
 
@@ -9,6 +12,8 @@ const (
 	DOUBLE
 	STRING
 )
+
+var LexerTypeToType = map[lexer.TokenType]Type{lexer.INT: INT, lexer.DOUBLE: DOUBLE, lexer.STRING: STRING}
 
 func (e Type) String() string {
 

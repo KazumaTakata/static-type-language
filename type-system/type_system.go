@@ -2,13 +2,11 @@ package type_checker
 
 import (
 	"fmt"
-	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/parser"
 	"github.com/KazumaTakata/static-typed-language/type"
 	"os"
 )
 
-var lexerTypeToType = map[lexer.TokenType]basic_type.Type{lexer.INT: basic_type.INT, lexer.DOUBLE: basic_type.DOUBLE, lexer.STRING: basic_type.STRING}
 var NumberType = map[basic_type.Type]bool{basic_type.INT: true, basic_type.DOUBLE: true}
 
 func Type_Check_Arith_Factor(factor1_type basic_type.Type, factor2_type basic_type.Type, op parser.FactorOp) basic_type.Type {
@@ -89,7 +87,7 @@ func Type_Check_Arith_Term(term1_type basic_type.Type, term2_type basic_type.Typ
 }
 
 func get_Type_of_Factor(factor parser.Factor) basic_type.Type {
-	return lexerTypeToType[factor.Type]
+	return basic_type.LexerTypeToType[factor.Type]
 }
 
 func Type_Check_Arith(arith *parser.Arith_expr) basic_type.Type {

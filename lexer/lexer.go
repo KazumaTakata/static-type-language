@@ -3,9 +3,40 @@ package lexer
 import (
 	"fmt"
 	"github.com/KazumaTakata/regex_virtualmachine"
+	"strings"
 )
 
 type TokenType int
+
+func Get_Regex_String() string {
+
+	lexer_rules := [][]string{}
+	lexer_rules = append(lexer_rules, []string{"DOUBLE", "\\d+\\.\\d*"})
+	lexer_rules = append(lexer_rules, []string{"INT", "\\d+"})
+	lexer_rules = append(lexer_rules, []string{"STRING", "\"\\w*\""})
+	lexer_rules = append(lexer_rules, []string{"ADD", "\\+"})
+	lexer_rules = append(lexer_rules, []string{"SUB", "\\-"})
+	lexer_rules = append(lexer_rules, []string{"MUL", "\\*"})
+	lexer_rules = append(lexer_rules, []string{"DIV", "\\/"})
+
+	//keyword
+	lexer_rules = append(lexer_rules, []string{"VAR", "var"})
+	//type
+	lexer_rules = append(lexer_rules, []string{"DECL_TYPE", "int|double|string"})
+	lexer_rules = append(lexer_rules, []string{"IDENT", "[a-zA-Z_]\\w*"})
+	lexer_rules = append(lexer_rules, []string{"EQUAL", "="})
+
+	regex_parts := []string{}
+
+	for _, rule := range lexer_rules {
+		regex_parts = append(regex_parts, fmt.Sprintf("(?<%s>%s)", rule[0], rule[1]))
+	}
+
+	regex_string := strings.Join(regex_parts, "|")
+	//fmt.Printf("%s", regex_string)
+
+	return regex_string
+}
 
 const (
 	INT TokenType = iota + 1
@@ -15,6 +46,10 @@ const (
 	SUB
 	MUL
 	DIV
+	IDENT
+	VAR
+	EQUAL
+	DECL_TYPE
 )
 
 func (e TokenType) String() string {
@@ -26,7 +61,6 @@ func (e TokenType) String() string {
 		return "DOUBLE"
 	case STRING:
 		return "STRING"
-
 	case ADD:
 		return "ADD"
 	case SUB:
@@ -35,20 +69,31 @@ func (e TokenType) String() string {
 		return "MUL"
 	case DIV:
 		return "DIV"
-
+	case IDENT:
+		return "IDENT"
+	case VAR:
+		return "VAR"
+	case EQUAL:
+		return "EQUAL"
+	case DECL_TYPE:
+		return "DECL_TYPE"
 	default:
 		return fmt.Sprintf("%d", int(e))
 	}
 }
 
 var tokenmap map[string]TokenType = map[string]TokenType{
-	"INT":    INT,
-	"STRING": STRING,
-	"DOUBLE": DOUBLE,
-	"ADD":    ADD,
-	"SUB":    SUB,
-	"MUL":    MUL,
-	"DIV":    DIV,
+	"INT":       INT,
+	"STRING":    STRING,
+	"DOUBLE":    DOUBLE,
+	"ADD":       ADD,
+	"SUB":       SUB,
+	"MUL":       MUL,
+	"DIV":       DIV,
+	"IDENT":     IDENT,
+	"VAR":       VAR,
+	"EQUAL":     EQUAL,
+	"DECL_TYPE": DECL_TYPE,
 }
 
 type Token struct {
