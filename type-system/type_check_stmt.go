@@ -26,11 +26,11 @@ func Type_Check_Stmt(stmt parser.Stmt) (basic_type.Type, Variable_Table) {
 	variable_map := Variable_Table{}
 
 	if stmt.Type == parser.EXPR {
-		expr_type := Type_Check_Arith(stmt.Expr)
+		expr_type := Type_Check_Arith(stmt.Expr, variable_map)
 		return expr_type, variable_map
 	} else if stmt.Type == parser.DECL_STMT {
 		var_type := stmt.Decl.Type
-		expr_type := Type_Check_Arith(stmt.Decl.Expr)
+		expr_type := Type_Check_Arith(stmt.Decl.Expr, variable_map)
 
 		variable_map[stmt.Decl.Id] = Variable{Type: var_type}
 

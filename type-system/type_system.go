@@ -2,9 +2,11 @@ package type_checker
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/parser"
 	"github.com/KazumaTakata/static-typed-language/type"
-	"os"
 )
 
 var NumberType = map[basic_type.Type]bool{basic_type.INT: true, basic_type.DOUBLE: true}
@@ -86,21 +88,26 @@ func Type_Check_Arith_Term(term1_type basic_type.Type, term2_type basic_type.Typ
 
 }
 
-func get_Type_of_Factor(factor parser.Factor) basic_type.Type {
+func get_Type_of_Factor(factor parser.Factor, variable_table Variable_Table) basic_type.Type {
+
+	if factor.Type == lexer.IDENT {
+		return variable_table[factor.Id].Type
+	}
+
 	return basic_type.LexerTypeToType[factor.Type]
 }
 
-func Type_Check_Arith(arith *parser.Arith_expr) basic_type.Type {
+func Type_Check_Arith(arith *parser.Arith_expr, variable_table Variable_Table) basic_type.Type {
 
-	arith.Type = Type_Check_Arith_Terms(arith.Terms)
+	arith.Type = Type_Check_Arith_Terms(arith.Terms, variable_table)
 
 	return arith.Type
 }
 
-func Type_Check_Arith_Terms(terms []parser.ArithElement) basic_type.Type {
+func Type_Check_Arith_Terms(terms []parser.ArithElement, variable_table Variable_Table) basic_type.Type {
 
 	if len(terms) == 1 {
-		return Type_Check_Arith_Factors(terms[0].Term.Factors)
+		return Type_Check_Arith_Factors(terms[0].Term.Factors, variable_table)
 	}
 
 	var operand1_type basic_type.Type
@@ -108,13 +115,13 @@ func Type_Check_Arith_Terms(terms []parser.ArithElement) basic_type.Type {
 
 	for i, term := range terms {
 		if i == 0 {
-			operand1_type = Type_Check_Arith_Factors(term.Term.Factors)
+			operand1_type = Type_Check_Arith_Factors(term.Term.Factors, variable_table)
 			terms[i].Term.Type = operand1_type
 			continue
 		}
 
 		operand2_type = operand1_type
-		operand1_type = Type_Check_Arith_Factors(term.Term.Factors)
+		operand1_type = Type_Check_Arith_Factors(term.Term.Factors, variable_table)
 		terms[i].Term.Type = operand1_type
 
 		operand1_type = Type_Check_Arith_Term(operand2_type, operand1_type, term.Op)
@@ -124,10 +131,10 @@ func Type_Check_Arith_Terms(terms []parser.ArithElement) basic_type.Type {
 
 }
 
-func Type_Check_Arith_Factors(factors []parser.TermElement) basic_type.Type {
+func Type_Check_Arith_Factors(factors []parser.TermElement, variable_table Variable_Table) basic_type.Type {
 
 	if len(factors) == 1 {
-		return get_Type_of_Factor(factors[0].Factor)
+		return get_Type_of_Factor(factors[0].Factor, variable_table)
 	}
 
 	var operand1_type basic_type.Type
@@ -135,12 +142,12 @@ func Type_Check_Arith_Factors(factors []parser.TermElement) basic_type.Type {
 
 	for i, factor := range factors {
 		if i == 0 {
-			operand1_type = get_Type_of_Factor(factor.Factor)
+			operand1_type = get_Type_of_Factor(factor.Factor, variable_table)
 			continue
 		}
 
 		operand2_type = operand1_type
-		operand1_type = Type_Check_Arith_Factor(operand2_type, get_Type_of_Factor(factor.Factor), factor.Op)
+		operand1_type = Type_Check_Arith_Factor(operand2_type, get_Type_of_Factor(factor.Factor, variable_table), factor.Op)
 	}
 
 	return operand1_type
