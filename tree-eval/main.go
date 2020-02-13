@@ -266,11 +266,14 @@ func Eval_Stmt(stmt parser.Stmt, variable_map type_checker.Variable_Table) {
 				{
 					result := Arith_Terms_INT(stmt.Decl.Expr.Terms, variable_map)
 					variable_map[stmt.Decl.Id] = type_checker.Variable{Int: result, Type: basic_type.INT}
+
+					fmt.Printf("%+v", result)
+
 				}
 			case basic_type.DOUBLE:
 				{
 					result := Arith_Terms_DOUBLE(stmt.Decl.Expr.Terms, variable_map)
-					variable_map[stmt.Decl.Id] = type_checker.Variable{Double: result, Type: basic_type.INT}
+					variable_map[stmt.Decl.Id] = type_checker.Variable{Double: result, Type: basic_type.DOUBLE}
 
 					fmt.Printf("%+v", result)
 
@@ -278,7 +281,7 @@ func Eval_Stmt(stmt parser.Stmt, variable_map type_checker.Variable_Table) {
 			case basic_type.STRING:
 				{
 					result := Arith_Terms_STRING(stmt.Decl.Expr.Terms, variable_map)
-					variable_map[stmt.Decl.Id] = type_checker.Variable{String: result, Type: basic_type.INT}
+					variable_map[stmt.Decl.Id] = type_checker.Variable{String: result, Type: basic_type.STRING}
 
 					fmt.Printf("%+v", result)
 

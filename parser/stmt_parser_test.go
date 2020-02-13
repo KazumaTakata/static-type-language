@@ -9,12 +9,13 @@ import (
 
 func TestStmtParser(t *testing.T) {
 
+	fmt.Printf("\n------------------------------------------------------\n")
+
 	regex_string := lexer.Get_Regex_String()
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	input := "var x int = 3+13.0"
-	fmt.Printf("%s\n", input)
+	input := "var x int = 3+13.0 \n\n\n\n x \n\n"
 
 	tokens := lexer.GetTokens(regex, input)
 
@@ -22,7 +23,7 @@ func TestStmtParser(t *testing.T) {
 
 	fmt.Printf("%+v\n\n", tokens)
 
-	stmt := Parse_Stmt(&parser_input)
+	stmt := Parse_Stmts(&parser_input)
 
 	fmt.Printf("%+v", stmt)
 }

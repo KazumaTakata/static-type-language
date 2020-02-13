@@ -34,10 +34,33 @@ type Stmt struct {
 type Decl_stmt struct {
 	Id   string
 	Type basic_type.Type
-	Expr Arith_expr
+	Expr *Arith_expr
 }
 
 var getBasicType = map[string]basic_type.Type{"int": basic_type.INT, "double": basic_type.DOUBLE, "string": basic_type.STRING}
+
+func eat_newline(tokens *Parser_Input) {
+	for !tokens.empty() && tokens.peek().Type == lexer.NEWLINE {
+		tokens.eat(lexer.NEWLINE)
+	}
+}
+
+func Parse_Stmts(tokens *Parser_Input) []Stmt {
+
+	stmts := []Stmt{}
+
+	for !tokens.empty() {
+		eat_newline(tokens)
+
+		stmt := Parse_Stmt(tokens)
+		stmts = append(stmts, stmt)
+
+		eat_newline(tokens)
+
+	}
+
+	return stmts
+}
 
 func Parse_Stmt(tokens *Parser_Input) Stmt {
 
@@ -51,9 +74,9 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				tokens.eat(lexer.VAR)
 				ident := tokens.assert_next(lexer.IDENT)
 				ident_type := tokens.assert_next(lexer.DECL_TYPE)
-				tokens.eat(lexer.EQUAL)
+				tokens.eat(lexer.ASSIGN)
 				expr := Parse_Arith_expr(tokens)
-				decl_stmt := Decl_stmt{Id: ident.Value, Type: getBasicType[ident_type.Value], Expr: expr}
+				decl_stmt := Decl_stmt{Id: ident.Value, Type: getBasicType[ident_type.Value], Expr: &expr}
 				stmt.Decl = &decl_stmt
 				stmt.Type = DECL_STMT
 

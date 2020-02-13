@@ -7,6 +7,41 @@ import (
 	"strconv"
 )
 
+type ArithOp int
+
+const (
+	EQUAL ArithOp = iota + 1
+	NOTEQUAL
+	MTHAN
+	METHAN
+	LTHAN
+	LETHAN
+	ANONE
+)
+
+func (e ArithOp) String() string {
+
+	switch e {
+	case EQUAL:
+		return "EQUAL"
+	case NOTEQUAL:
+		return "NOTEQUAL"
+	case MTHAN:
+		return "MTHAN"
+	case METHAN:
+		return "METHAN"
+	case LTHAN:
+		return "LTHAN"
+	case LETHAN:
+		return "LETHAN"
+	case ANONE:
+		return "ANONE"
+
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
 type FactorOp int
 
 const (
@@ -53,6 +88,16 @@ func (e TermOp) String() string {
 	}
 }
 
+type Cmp_expr struct {
+	Ariths []CmpElement
+	Type   basic_type.Type
+}
+
+type CmpElement struct {
+	Arith Arith_expr
+	Op    ArithOp
+}
+
 type Arith_expr struct {
 	Terms []ArithElement
 	Type  basic_type.Type
@@ -77,7 +122,45 @@ type Factor struct {
 	Int    int
 	Float  float64
 	String string
+	Id     string
 	Type   lexer.TokenType
+}
+
+func Parse_Cmp_expr(tokens *Parser_Input) Cmp_expr {
+
+	ariths := []CmpElement{}
+	arith := Parse_Arith_expr(tokens)
+	ariths = append(ariths, CmpElement{Arith: arith, Op: ANONE})
+
+	for !tokens.empty() && tokens.peek().Type != lexer.NEWLINE && (tokens.peek().Type == lexer.EQUAL || tokens.peek().Type == lexer.NOTEQUAL) {
+		op := tokens.next()
+		var aop ArithOp
+		switch op.Type {
+		case lexer.EQUAL:
+			{
+				aop = EQUAL
+			}
+		case lexer.NOTEQUAL:
+			{
+				aop = NOTEQUAL
+			}
+		default:
+			{
+				aop = ANONE
+			}
+
+		}
+
+		arith := Parse_Arith_expr(tokens)
+		ariths = append(ariths, CmpElement{Arith: arith, Op: aop})
+
+	}
+
+	if !tokens.empty() && tokens.peek().Type == lexer.NEWLINE {
+		tokens.eat(lexer.NEWLINE)
+	}
+
+	return Cmp_expr{Ariths: ariths}
 }
 
 func Parse_Arith_expr(tokens *Parser_Input) Arith_expr {
@@ -86,7 +169,7 @@ func Parse_Arith_expr(tokens *Parser_Input) Arith_expr {
 	term := parse_Term(tokens)
 	terms = append(terms, ArithElement{Term: term, Op: TNONE})
 
-	for !tokens.empty() && (tokens.peek().Type == lexer.ADD || tokens.peek().Type == lexer.SUB) {
+	for !tokens.empty() && tokens.peek().Type != lexer.NEWLINE && (tokens.peek().Type == lexer.ADD || tokens.peek().Type == lexer.SUB) {
 		op := tokens.next()
 		var top TermOp
 		switch op.Type {
@@ -108,6 +191,10 @@ func Parse_Arith_expr(tokens *Parser_Input) Arith_expr {
 		term := parse_Term(tokens)
 		terms = append(terms, ArithElement{Term: term, Op: top})
 
+	}
+
+	if !tokens.empty() && tokens.peek().Type == lexer.NEWLINE {
+		tokens.eat(lexer.NEWLINE)
 	}
 
 	return Arith_expr{Terms: terms}
@@ -164,6 +251,12 @@ func parse_Factor(tokens *Parser_Input) Factor {
 		{
 			string_token := tokens.next()
 			return Factor{String: string_token.Value, Type: lexer.STRING}
+		}
+	case lexer.IDENT:
+		{
+			ident_token := tokens.next()
+			return Factor{Id: ident_token.Value, Type: lexer.IDENT}
+
 		}
 
 	}

@@ -18,14 +18,25 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"SUB", "\\-"})
 	lexer_rules = append(lexer_rules, []string{"MUL", "\\*"})
 	lexer_rules = append(lexer_rules, []string{"DIV", "\\/"})
+	lexer_rules = append(lexer_rules, []string{"NEWLINE", "\n"})
+	lexer_rules = append(lexer_rules, []string{"LPAREN", "\\("})
+	lexer_rules = append(lexer_rules, []string{"RPAREN", "\\)"})
+	lexer_rules = append(lexer_rules, []string{"LCURL", "\\{"})
+	lexer_rules = append(lexer_rules, []string{"RCURL", "\\}"})
 
 	//keyword
 	lexer_rules = append(lexer_rules, []string{"VAR", "var"})
-	//type
-	lexer_rules = append(lexer_rules, []string{"DECL_TYPE", "int|double|string"})
-	lexer_rules = append(lexer_rules, []string{"IDENT", "[a-zA-Z_]\\w*"})
-	lexer_rules = append(lexer_rules, []string{"EQUAL", "="})
+	lexer_rules = append(lexer_rules, []string{"IF", "if"})
+	lexer_rules = append(lexer_rules, []string{"FOR", "for"})
 
+	//type
+	lexer_rules = append(lexer_rules, []string{"DECL_TYPE", "int|double|string|bool"})
+
+	lexer_rules = append(lexer_rules, []string{"IDENT", "[a-zA-Z_]\\w*"})
+	lexer_rules = append(lexer_rules, []string{"EQUAL", "=="})
+	lexer_rules = append(lexer_rules, []string{"NOTEQUAL", "!="})
+
+	lexer_rules = append(lexer_rules, []string{"ASSIGN", "="})
 	regex_parts := []string{}
 
 	for _, rule := range lexer_rules {
@@ -48,8 +59,17 @@ const (
 	DIV
 	IDENT
 	VAR
-	EQUAL
+	ASSIGN
 	DECL_TYPE
+	NEWLINE
+	IF
+	FOR
+	LPAREN
+	RPAREN
+	LCURL
+	RCURL
+	EQUAL
+	NOTEQUAL
 )
 
 func (e TokenType) String() string {
@@ -73,10 +93,29 @@ func (e TokenType) String() string {
 		return "IDENT"
 	case VAR:
 		return "VAR"
-	case EQUAL:
-		return "EQUAL"
+	case ASSIGN:
+		return "ASSIGN"
 	case DECL_TYPE:
 		return "DECL_TYPE"
+	case NEWLINE:
+		return "NEWLINE"
+	case IF:
+		return "IF"
+	case FOR:
+		return "FOR"
+	case LPAREN:
+		return "LPAREN"
+	case RPAREN:
+		return "RPAREN"
+	case RCURL:
+		return "RCURL"
+	case LCURL:
+		return "LCURL"
+	case EQUAL:
+		return "EQUAL"
+	case NOTEQUAL:
+		return "NOTEQUAL"
+
 	default:
 		return fmt.Sprintf("%d", int(e))
 	}
@@ -92,8 +131,17 @@ var tokenmap map[string]TokenType = map[string]TokenType{
 	"DIV":       DIV,
 	"IDENT":     IDENT,
 	"VAR":       VAR,
-	"EQUAL":     EQUAL,
+	"ASSIGN":    ASSIGN,
 	"DECL_TYPE": DECL_TYPE,
+	"NEWLINE":   NEWLINE,
+	"IF":        IF,
+	"FOR":       FOR,
+	"LPAREN":    LPAREN,
+	"RPAREN":    RPAREN,
+	"LCURL":     LCURL,
+	"RCURL":     RCURL,
+	"EQUAL":     EQUAL,
+	"NOTEQUAL":  NOTEQUAL,
 }
 
 type Token struct {
@@ -134,9 +182,7 @@ func eatSpace(regex regex.Regex, input string) string {
 
 	match_range, ifmatch, _ := regex.Match(input)
 
-	if !ifmatch {
-		input = input
-	} else {
+	if ifmatch {
 		input = input[match_range[1]:]
 	}
 
@@ -146,7 +192,7 @@ func eatSpace(regex regex.Regex, input string) string {
 
 func GetTokens(Regex regex.Regex, input string) []Token {
 
-	white_space_regex := regex.NewRegexWithParser("(\\s+)")
+	white_space_regex := regex.NewRegexWithParser("([ \t]+)")
 	input = eatSpace(white_space_regex, input)
 
 	tokens := []Token{}
