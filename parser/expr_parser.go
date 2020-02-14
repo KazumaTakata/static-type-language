@@ -123,6 +123,7 @@ type Factor struct {
 	Float  float64
 	String string
 	Id     string
+	Bool   bool
 	Type   lexer.TokenType
 }
 
@@ -256,9 +257,19 @@ func parse_Factor(tokens *Parser_Input) Factor {
 		{
 			ident_token := tokens.next()
 			return Factor{Id: ident_token.Value, Type: lexer.IDENT}
-
 		}
+	case lexer.BOOL:
+		{
+			bool_token := tokens.next()
+			var bool_value bool
+			if bool_token.Value == "true" {
+				bool_value = true
+			} else {
+				bool_value = false
+			}
 
+			return Factor{Bool: bool_value, Type: lexer.IDENT}
+		}
 	}
 
 	return Factor{}

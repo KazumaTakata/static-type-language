@@ -58,6 +58,20 @@ func Arith_Factors_STRING(factors []parser.TermElement, variable_map type_checke
 	return ""
 }
 
+func Arith_Factors_BOOL(factors []parser.TermElement, variable_map type_checker.Variable_Table) bool {
+
+	if len(factors) == 1 {
+
+		if factors[0].Factor.Type == lexer.IDENT {
+			return variable_map[factors[0].Factor.Id].Bool
+		}
+
+		return factors[0].Factor.Bool
+	}
+	os.Exit(1)
+	return true
+}
+
 func Arith_Factors_DOUBLE(factors []parser.TermElement, variable_map type_checker.Variable_Table) float64 {
 
 	if len(factors) == 1 {
@@ -255,9 +269,101 @@ func Arith_Terms_STRING(terms []parser.ArithElement, variable_map type_checker.V
 	return result
 }
 
+func Arith_Terms_BOOL(terms []parser.ArithElement, variable_map type_checker.Variable_Table) bool {
+
+	if len(terms) == 1 {
+		return Arith_Factors_BOOL(terms[0].Term.Factors, variable_map)
+	}
+
+	os.Exit(1)
+
+	return true
+
+}
+
+func Eval_Cmp(cmp_expr parser.Cmp_expr, variable_map type_checker.Variable_Table) bool {
+	if len(cmp_expr.Ariths) == 1 {
+		return Arith_Terms_BOOL(cmp_expr.Ariths[0].Arith.Terms, variable_map)
+	}
+
+	switch cmp_expr.Ariths[0].Arith.Type {
+	case basic_type.INT:
+		{
+			cmp1 := Arith_Terms_INT(cmp_expr.Ariths[0].Arith.Terms, variable_map)
+
+			if cmp_expr.Ariths[1].Arith.Type != basic_type.INT {
+				os.Exit(1)
+			} else {
+				cmp2 := Arith_Terms_INT(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+
+				if cmp1 == cmp2 {
+					return true
+				} else {
+					return false
+				}
+
+			}
+
+		}
+	case basic_type.DOUBLE:
+		{
+			cmp1 := Arith_Terms_DOUBLE(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+
+			if cmp_expr.Ariths[1].Arith.Type != basic_type.DOUBLE {
+				os.Exit(1)
+			} else {
+				cmp2 := Arith_Terms_DOUBLE(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+
+				if cmp1 == cmp2 {
+					return true
+				} else {
+					return false
+				}
+
+			}
+
+		}
+	case basic_type.STRING:
+		{
+			cmp1 := Arith_Terms_STRING(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+
+			if cmp_expr.Ariths[1].Arith.Type != basic_type.STRING {
+				os.Exit(1)
+			} else {
+				cmp2 := Arith_Terms_STRING(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+
+				if cmp1 == cmp2 {
+					return true
+				} else {
+					return false
+				}
+
+			}
+		}
+
+	}
+
+	return true
+}
+
+func Eval_Stmts(stmts []parser.Stmt, variable_map type_checker.Variable_Table) {
+
+	for _, stmt := range stmts {
+		Eval_Stmt(stmt, variable_map)
+	}
+}
+
 func Eval_Stmt(stmt parser.Stmt, variable_map type_checker.Variable_Table) {
 
 	switch stmt.Type {
+
+	case parser.FOR_STMT:
+		{
+			for Eval_Cmp(stmt.For.Cmp_expr, variable_map) {
+				Eval_Stmts(stmt.For.Stmts, variable_map)
+			}
+
+		}
 	case parser.DECL_STMT:
 		{
 

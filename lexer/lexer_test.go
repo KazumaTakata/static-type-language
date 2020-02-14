@@ -28,4 +28,8 @@ func TestLexer(t *testing.T) {
 
 	fmt.Printf("%+v\n", tokens)
 
+	tokens = GetTokens(regex, "if true {}")
+
+	fmt.Printf("%+v\n", tokens)
+
 }
