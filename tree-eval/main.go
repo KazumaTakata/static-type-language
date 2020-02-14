@@ -364,6 +364,13 @@ func Eval_Stmt(stmt parser.Stmt, variable_map type_checker.Variable_Table) {
 			}
 
 		}
+	case parser.IF_STMT:
+		{
+			if Eval_Cmp(stmt.If.Cmp_expr, variable_map) {
+				Eval_Stmts(stmt.If.Stmts, variable_map)
+			}
+		}
+
 	case parser.DECL_STMT:
 		{
 
@@ -392,6 +399,16 @@ func Eval_Stmt(stmt parser.Stmt, variable_map type_checker.Variable_Table) {
 					fmt.Printf("%+v", result)
 
 				}
+
+			case basic_type.BOOL:
+				{
+					result := Arith_Terms_BOOL(stmt.Decl.Expr.Terms, variable_map)
+					variable_map[stmt.Decl.Id] = type_checker.Variable{Bool: result, Type: basic_type.STRING}
+
+					fmt.Printf("%+v", result)
+
+				}
+
 			}
 
 		}

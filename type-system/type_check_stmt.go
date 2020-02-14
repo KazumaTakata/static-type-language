@@ -14,6 +14,7 @@ type Variable struct {
 	Int    int
 	Double float64
 	String string
+	Bool   bool
 }
 
 type Type_Env struct {
