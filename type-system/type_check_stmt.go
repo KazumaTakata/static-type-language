@@ -28,23 +28,50 @@ func Type_Check_Stmts(stmts []parser.Stmt, variable_map Variable_Table) {
 	}
 
 }
-func Type_Check_Stmt(stmt parser.Stmt, variable_map Variable_Table) basic_type.Type {
-	if stmt.Type == parser.EXPR {
-		expr_type := Type_Check_Arith(stmt.Expr, variable_map)
-		return expr_type
-	} else if stmt.Type == parser.DECL_STMT {
-		var_type := stmt.Decl.Type
-		expr_type := Type_Check_Arith(stmt.Decl.Expr, variable_map)
+func Type_Check_Stmt(stmt parser.Stmt, variable_map Variable_Table) {
+	switch stmt.Type {
+	case parser.EXPR:
+		{
+			_ = Type_Check_Arith(stmt.Expr, variable_map)
 
-		variable_map[stmt.Decl.Id] = Variable{Type: var_type}
+		}
+	case parser.DECL_STMT:
+		{
+			var_type := stmt.Decl.Type
+			expr_type := Type_Check_Arith(stmt.Decl.Expr, variable_map)
 
-		if var_type != expr_type {
-			fmt.Printf("%+v value can not assigned to %+v variable\n", expr_type, var_type)
-			os.Exit(1)
+			variable_map[stmt.Decl.Id] = Variable{Type: var_type}
+
+			if var_type != expr_type {
+				fmt.Printf("%+v value can not assigned to %+v variable\n", expr_type, var_type)
+				os.Exit(1)
+			}
+
+		}
+	case parser.FOR_STMT:
+		{
+			_ = Type_Check_Cmp(&stmt.For.Cmp_expr, variable_map)
+
+			if stmt.For.Cmp_expr.Type != basic_type.BOOL {
+				fmt.Printf("if conditional expression should return bool type: return %+v\n", stmt.For.Cmp_expr.Type)
+				os.Exit(1)
+			}
+
+			Type_Check_Stmts(stmt.For.Stmts, variable_map)
+
+		}
+	case parser.IF_STMT:
+		{
+			_ = Type_Check_Cmp(&stmt.For.Cmp_expr, variable_map)
+
+			if stmt.For.Cmp_expr.Type != basic_type.BOOL {
+				fmt.Printf("if conditional expression should return bool type: return %+v\n", stmt.For.Cmp_expr.Type)
+				os.Exit(1)
+			}
+
+			Type_Check_Stmts(stmt.For.Stmts, variable_map)
+
 		}
 
-		return var_type
 	}
-
-	return basic_type.INT
 }

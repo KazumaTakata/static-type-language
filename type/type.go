@@ -11,6 +11,7 @@ const (
 	INT Type = iota + 1
 	DOUBLE
 	STRING
+	BOOL
 )
 
 var LexerTypeToType = map[lexer.TokenType]Type{lexer.INT: INT, lexer.DOUBLE: DOUBLE, lexer.STRING: STRING}
@@ -24,6 +25,8 @@ func (e Type) String() string {
 		return "DOUBLE"
 	case STRING:
 		return "STRING"
+	case BOOL:
+		return "BOOL"
 
 	default:
 		return fmt.Sprintf("NULL")

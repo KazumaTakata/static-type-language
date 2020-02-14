@@ -88,6 +88,19 @@ func Type_Check_Arith_Term(term1_type basic_type.Type, term2_type basic_type.Typ
 
 }
 
+func Type_Check_Cmp_Arith(term1_type basic_type.Type, term2_type basic_type.Type, op parser.ArithOp) basic_type.Type {
+
+	if term1_type == term2_type {
+		return basic_type.BOOL
+	}
+
+	fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", term1_type, op, term2_type)
+	os.Exit(1)
+
+	return basic_type.INT
+
+}
+
 func get_Type_of_Factor(factor parser.Factor, variable_table Variable_Table) basic_type.Type {
 
 	if factor.Type == lexer.IDENT {
@@ -95,6 +108,48 @@ func get_Type_of_Factor(factor parser.Factor, variable_table Variable_Table) bas
 	}
 
 	return basic_type.LexerTypeToType[factor.Type]
+}
+
+func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, variable_table Variable_Table) basic_type.Type {
+
+	cmp_expr.Type = Type_Check_Cmp_Ariths(cmp_expr.Ariths, variable_table)
+
+	return cmp_expr.Type
+}
+
+func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, variable_table Variable_Table) basic_type.Type {
+
+	if len(ariths) == 1 {
+		return Type_Check_Arith_Terms(ariths[0].Arith.Terms, variable_table)
+	}
+
+	var operand1_type basic_type.Type
+	var operand2_type basic_type.Type
+
+	for i, arith := range ariths {
+		if i == 0 {
+			operand1_type = Type_Check_Arith_Terms(arith.Arith.Terms, variable_table)
+			ariths[i].Arith.Type = operand1_type
+			continue
+		}
+
+		operand2_type = operand1_type
+
+		operand1_type = Type_Check_Arith_Terms(arith.Arith.Terms, variable_table)
+		ariths[i].Arith.Type = operand1_type
+
+		if operand1_type != operand2_type {
+
+			fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", operand2_type, arith.Op, operand1_type)
+			os.Exit(1)
+
+		} else {
+			operand1_type = basic_type.BOOL
+		}
+	}
+
+	return operand1_type
+
 }
 
 func Type_Check_Arith(arith *parser.Arith_expr, variable_table Variable_Table) basic_type.Type {

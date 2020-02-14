@@ -334,7 +334,7 @@ func getClosure() func([]byte) {
 		parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
 		stmt := parser.Parse_Stmt(&parser_input)
 
-		_ = type_checker.Type_Check_Stmt(stmt, variable_table)
+		type_checker.Type_Check_Stmt(stmt, variable_table)
 
 		Eval_Stmt(stmt, variable_table)
 	}
