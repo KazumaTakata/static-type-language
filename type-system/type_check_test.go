@@ -21,9 +21,9 @@ func TestLexer(t *testing.T) {
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
 	stmts := parser.Parse_Stmts(&parser_input)
 
-	variable_map := Variable_Table{}
+	variable_map := Symbol_Env{Table: Variable_Table{}}
 
-	Type_Check_Stmts(stmts, variable_map)
+	Type_Check_Stmts(stmts, &variable_map)
 
 	fmt.Printf("%+v\n", variable_map)
 
@@ -35,15 +35,15 @@ func TestFor(t *testing.T) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	string_input := "for 1 == 1 { var x double = 1 } "
+	string_input := "var x int = 3\n if 1 == 1 { var y int = 1 + z  } "
 
 	tokens := lexer.GetTokens(regex, string_input)
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
 	stmts := parser.Parse_Stmts(&parser_input)
 
-	variable_map := Variable_Table{}
+	variable_map := Symbol_Env{Table: Variable_Table{}}
 
-	Type_Check_Stmts(stmts, variable_map)
+	Type_Check_Stmts(stmts, &variable_map)
 
 	fmt.Printf("%+v\n", variable_map)
 

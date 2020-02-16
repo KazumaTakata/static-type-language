@@ -101,26 +101,42 @@ func Type_Check_Cmp_Arith(term1_type basic_type.Type, term2_type basic_type.Type
 
 }
 
-func get_Type_of_Factor(factor parser.Factor, variable_table Variable_Table) basic_type.Type {
+func resolve_name(id string, symbol_env *Symbol_Env) basic_type.Type {
+	if factor, ok := symbol_env.Table[id]; ok {
+		return factor.Type
+	} else {
+		if symbol_env.Parent_Env != nil {
+			return resolve_name(id, symbol_env.Parent_Env)
+		}
+
+		fmt.Printf("\nnot defined variable %v\n", id)
+		os.Exit(1)
+
+	}
+
+	return basic_type.INT
+}
+
+func get_Type_of_Factor(factor parser.Factor, symbol_env *Symbol_Env) basic_type.Type {
 
 	if factor.Type == lexer.IDENT {
-		return variable_table[factor.Id].Type
+		return resolve_name(factor.Id, symbol_env)
 	}
 
 	return basic_type.LexerTypeToType[factor.Type]
 }
 
-func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, variable_table Variable_Table) basic_type.Type {
+func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, symbol_env *Symbol_Env) basic_type.Type {
 
-	cmp_expr.Type = Type_Check_Cmp_Ariths(cmp_expr.Ariths, variable_table)
+	cmp_expr.Type = Type_Check_Cmp_Ariths(cmp_expr.Ariths, symbol_env)
 
 	return cmp_expr.Type
 }
 
-func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, variable_table Variable_Table) basic_type.Type {
+func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, symbol_env *Symbol_Env) basic_type.Type {
 
 	if len(ariths) == 1 {
-		return Type_Check_Arith_Terms(ariths[0].Arith.Terms, variable_table)
+		return Type_Check_Arith_Terms(ariths[0].Arith.Terms, symbol_env)
 	}
 
 	var operand1_type basic_type.Type
@@ -128,14 +144,14 @@ func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, variable_table Variable_T
 
 	for i, arith := range ariths {
 		if i == 0 {
-			operand1_type = Type_Check_Arith_Terms(arith.Arith.Terms, variable_table)
+			operand1_type = Type_Check_Arith_Terms(arith.Arith.Terms, symbol_env)
 			ariths[i].Arith.Type = operand1_type
 			continue
 		}
 
 		operand2_type = operand1_type
 
-		operand1_type = Type_Check_Arith_Terms(arith.Arith.Terms, variable_table)
+		operand1_type = Type_Check_Arith_Terms(arith.Arith.Terms, symbol_env)
 		ariths[i].Arith.Type = operand1_type
 
 		if operand1_type != operand2_type {
@@ -152,17 +168,17 @@ func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, variable_table Variable_T
 
 }
 
-func Type_Check_Arith(arith *parser.Arith_expr, variable_table Variable_Table) basic_type.Type {
+func Type_Check_Arith(arith *parser.Arith_expr, symbol_env *Symbol_Env) basic_type.Type {
 
-	arith.Type = Type_Check_Arith_Terms(arith.Terms, variable_table)
+	arith.Type = Type_Check_Arith_Terms(arith.Terms, symbol_env)
 
 	return arith.Type
 }
 
-func Type_Check_Arith_Terms(terms []parser.ArithElement, variable_table Variable_Table) basic_type.Type {
+func Type_Check_Arith_Terms(terms []parser.ArithElement, symbol_env *Symbol_Env) basic_type.Type {
 
 	if len(terms) == 1 {
-		return Type_Check_Arith_Factors(terms[0].Term.Factors, variable_table)
+		return Type_Check_Arith_Factors(terms[0].Term.Factors, symbol_env)
 	}
 
 	var operand1_type basic_type.Type
@@ -170,13 +186,13 @@ func Type_Check_Arith_Terms(terms []parser.ArithElement, variable_table Variable
 
 	for i, term := range terms {
 		if i == 0 {
-			operand1_type = Type_Check_Arith_Factors(term.Term.Factors, variable_table)
+			operand1_type = Type_Check_Arith_Factors(term.Term.Factors, symbol_env)
 			terms[i].Term.Type = operand1_type
 			continue
 		}
 
 		operand2_type = operand1_type
-		operand1_type = Type_Check_Arith_Factors(term.Term.Factors, variable_table)
+		operand1_type = Type_Check_Arith_Factors(term.Term.Factors, symbol_env)
 		terms[i].Term.Type = operand1_type
 
 		operand1_type = Type_Check_Arith_Term(operand2_type, operand1_type, term.Op)
@@ -186,10 +202,10 @@ func Type_Check_Arith_Terms(terms []parser.ArithElement, variable_table Variable
 
 }
 
-func Type_Check_Arith_Factors(factors []parser.TermElement, variable_table Variable_Table) basic_type.Type {
+func Type_Check_Arith_Factors(factors []parser.TermElement, symbol_env *Symbol_Env) basic_type.Type {
 
 	if len(factors) == 1 {
-		return get_Type_of_Factor(factors[0].Factor, variable_table)
+		return get_Type_of_Factor(factors[0].Factor, symbol_env)
 	}
 
 	var operand1_type basic_type.Type
@@ -197,12 +213,12 @@ func Type_Check_Arith_Factors(factors []parser.TermElement, variable_table Varia
 
 	for i, factor := range factors {
 		if i == 0 {
-			operand1_type = get_Type_of_Factor(factor.Factor, variable_table)
+			operand1_type = get_Type_of_Factor(factor.Factor, symbol_env)
 			continue
 		}
 
 		operand2_type = operand1_type
-		operand1_type = Type_Check_Arith_Factor(operand2_type, get_Type_of_Factor(factor.Factor, variable_table), factor.Op)
+		operand1_type = Type_Check_Arith_Factor(operand2_type, get_Type_of_Factor(factor.Factor, symbol_env), factor.Op)
 	}
 
 	return operand1_type
