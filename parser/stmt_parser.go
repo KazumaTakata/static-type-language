@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/KazumaTakata/static-typed-language/lexer"
-	"github.com/KazumaTakata/static-typed-language/object"
 	"github.com/KazumaTakata/static-typed-language/type"
 )
 
@@ -38,22 +37,15 @@ func (e Stmt_Type) String() string {
 }
 
 type For_stmt struct {
-	Symbol_Env *object.Symbol_Env
+	Symbol_Env *Symbol_Env
 	Cmp_expr   Cmp_expr
 	Stmts      []Stmt
 }
 
 type If_stmt struct {
-	Symbol_Env *object.Symbol_Env
+	Symbol_Env *Symbol_Env
 	Cmp_expr   Cmp_expr
 	Stmts      []Stmt
-}
-
-type Def_stmt struct {
-	Id          string
-	Args        []Func_param
-	Stmts       []Stmt
-	Return_type basic_type.Type
 }
 
 type Stmt struct {
@@ -63,6 +55,16 @@ type Stmt struct {
 	For  *For_stmt
 	If   *If_stmt
 	Def  *Def_stmt
+}
+type Func_param struct {
+	Ident string
+	Type  basic_type.Type
+}
+type Def_stmt struct {
+	Id          string
+	Args        []Func_param
+	Stmts       []Stmt
+	Return_type basic_type.Type
 }
 
 type Decl_stmt struct {
@@ -95,11 +97,6 @@ func Parse_Stmts(tokens *Parser_Input) []Stmt {
 	}
 
 	return stmts
-}
-
-type Func_param struct {
-	Ident string
-	Type  basic_type.Type
 }
 
 func Parse_Stmt(tokens *Parser_Input) Stmt {

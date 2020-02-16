@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/KazumaTakata/regex_virtualmachine"
 	"github.com/KazumaTakata/static-typed-language/lexer"
-	"github.com/KazumaTakata/static-typed-language/object"
 	"github.com/KazumaTakata/static-typed-language/parser"
 
 	"testing"
@@ -22,7 +21,7 @@ func TestLexer(t *testing.T) {
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
 	stmts := parser.Parse_Stmts(&parser_input)
 
-	variable_map := object.Symbol_Env{Table: object.Variable_Table{}}
+	variable_map := parser.Symbol_Env{Table: parser.Variable_Table{}}
 
 	Type_Check_Stmts(stmts, &variable_map)
 
@@ -42,7 +41,7 @@ func TestFor(t *testing.T) {
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
 	stmts := parser.Parse_Stmts(&parser_input)
 
-	variable_map := object.Symbol_Env{Table: object.Variable_Table{}}
+	variable_map := parser.Symbol_Env{Table: parser.Variable_Table{}}
 
 	Type_Check_Stmts(stmts, &variable_map)
 
