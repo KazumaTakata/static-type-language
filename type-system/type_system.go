@@ -1,12 +1,12 @@
-package type_checker
+package type_system
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/KazumaTakata/static-typed-language/lexer"
+	"github.com/KazumaTakata/static-typed-language/object"
 	"github.com/KazumaTakata/static-typed-language/parser"
 	"github.com/KazumaTakata/static-typed-language/type"
+	"os"
 )
 
 var NumberType = map[basic_type.Type]bool{basic_type.INT: true, basic_type.DOUBLE: true}
@@ -101,7 +101,7 @@ func Type_Check_Cmp_Arith(term1_type basic_type.Type, term2_type basic_type.Type
 
 }
 
-func resolve_name(id string, symbol_env *Symbol_Env) basic_type.Type {
+func resolve_name(id string, symbol_env *object.Symbol_Env) basic_type.Type {
 	if factor, ok := symbol_env.Table[id]; ok {
 		return factor.Type
 	} else {
@@ -117,7 +117,7 @@ func resolve_name(id string, symbol_env *Symbol_Env) basic_type.Type {
 	return basic_type.INT
 }
 
-func get_Type_of_Factor(factor parser.Factor, symbol_env *Symbol_Env) basic_type.Type {
+func get_Type_of_Factor(factor parser.Factor, symbol_env *object.Symbol_Env) basic_type.Type {
 
 	if factor.Type == lexer.IDENT {
 		return resolve_name(factor.Id, symbol_env)
@@ -126,14 +126,14 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *Symbol_Env) basic_type
 	return basic_type.LexerTypeToType[factor.Type]
 }
 
-func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, symbol_env *Symbol_Env) basic_type.Type {
+func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, symbol_env *object.Symbol_Env) basic_type.Type {
 
 	cmp_expr.Type = Type_Check_Cmp_Ariths(cmp_expr.Ariths, symbol_env)
 
 	return cmp_expr.Type
 }
 
-func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, symbol_env *Symbol_Env) basic_type.Type {
+func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, symbol_env *object.Symbol_Env) basic_type.Type {
 
 	if len(ariths) == 1 {
 		return Type_Check_Arith_Terms(ariths[0].Arith.Terms, symbol_env)
@@ -168,14 +168,14 @@ func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, symbol_env *Symbol_Env) b
 
 }
 
-func Type_Check_Arith(arith *parser.Arith_expr, symbol_env *Symbol_Env) basic_type.Type {
+func Type_Check_Arith(arith *parser.Arith_expr, symbol_env *object.Symbol_Env) basic_type.Type {
 
 	arith.Type = Type_Check_Arith_Terms(arith.Terms, symbol_env)
 
 	return arith.Type
 }
 
-func Type_Check_Arith_Terms(terms []parser.ArithElement, symbol_env *Symbol_Env) basic_type.Type {
+func Type_Check_Arith_Terms(terms []parser.ArithElement, symbol_env *object.Symbol_Env) basic_type.Type {
 
 	if len(terms) == 1 {
 		return Type_Check_Arith_Factors(terms[0].Term.Factors, symbol_env)
@@ -202,7 +202,7 @@ func Type_Check_Arith_Terms(terms []parser.ArithElement, symbol_env *Symbol_Env)
 
 }
 
-func Type_Check_Arith_Factors(factors []parser.TermElement, symbol_env *Symbol_Env) basic_type.Type {
+func Type_Check_Arith_Factors(factors []parser.TermElement, symbol_env *object.Symbol_Env) basic_type.Type {
 
 	if len(factors) == 1 {
 		return get_Type_of_Factor(factors[0].Factor, symbol_env)

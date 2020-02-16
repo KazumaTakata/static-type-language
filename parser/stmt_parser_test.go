@@ -48,3 +48,24 @@ func TestForstmtParser(t *testing.T) {
 
 	fmt.Printf("%+v", stmt.For)
 }
+
+func TestDefStmtParser(t *testing.T) {
+
+	fmt.Printf("\n------------------------------------------------------\n")
+
+	regex_string := lexer.Get_Regex_String()
+
+	regex := regex.NewRegexWithParser(regex_string)
+
+	input := "def add(a int, b int) int { a } \n\n"
+
+	tokens := lexer.GetTokens(regex, input)
+
+	parser_input := Parser_Input{Tokens: tokens, Pos: 0}
+
+	fmt.Printf("%+v\n\n", tokens)
+
+	stmt := Parse_Stmt(&parser_input)
+
+	fmt.Printf("%+v", stmt.Def)
+}

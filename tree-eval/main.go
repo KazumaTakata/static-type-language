@@ -1,22 +1,67 @@
-package main
+package eval
 
 import (
 	"fmt"
-	"github.com/KazumaTakata/readline"
-	"github.com/KazumaTakata/regex_virtualmachine"
 	"github.com/KazumaTakata/static-typed-language/lexer"
+	"github.com/KazumaTakata/static-typed-language/object"
 	"github.com/KazumaTakata/static-typed-language/parser"
+
 	basic_type "github.com/KazumaTakata/static-typed-language/type"
-	type_checker "github.com/KazumaTakata/static-typed-language/type-system"
 	"os"
 )
 
-func Arith_Factors_INT(factors []parser.TermElement, variable_map type_checker.Variable_Table) int {
+func resolve_variable_int(id string, symbol_env *object.Symbol_Env) int {
+	if factor, ok := symbol_env.Table[id]; ok {
+		return factor.Int
+	} else {
+		if symbol_env.Parent_Env != nil {
+			return resolve_variable_int(id, symbol_env.Parent_Env)
+		}
+		fmt.Printf("\nnot defined variable %v\n", id)
+		os.Exit(1)
+	}
+	return 0
+
+}
+
+func resolve_variable_string(id string, symbol_env *object.Symbol_Env) string {
+	if factor, ok := symbol_env.Table[id]; ok {
+		return factor.String
+	} else {
+		if symbol_env.Parent_Env != nil {
+			return resolve_variable_string(id, symbol_env.Parent_Env)
+		}
+
+		fmt.Printf("\nnot defined variable %v\n", id)
+		os.Exit(1)
+
+	}
+	return ""
+
+}
+
+func resolve_variable_bool(id string, symbol_env *object.Symbol_Env) bool {
+	if factor, ok := symbol_env.Table[id]; ok {
+		return factor.Bool
+	} else {
+		if symbol_env.Parent_Env != nil {
+			return resolve_variable_bool(id, symbol_env.Parent_Env)
+		}
+
+		fmt.Printf("\nnot defined variable %v\n", id)
+		os.Exit(1)
+
+	}
+	return true
+
+}
+
+func Arith_Factors_INT(factors []parser.TermElement, symbol_env *object.Symbol_Env) int {
 
 	if len(factors) == 1 {
 
 		if factors[0].Factor.Type == lexer.IDENT {
-			return variable_map[factors[0].Factor.Id].Int
+			return resolve_variable_int(factors[0].Factor.Id, symbol_env)
 		}
 		return factors[0].Factor.Int
 	}
@@ -31,12 +76,21 @@ func Arith_Factors_INT(factors []parser.TermElement, variable_map type_checker.V
 		switch factor.Op {
 		case parser.MUL:
 			{
-				result = result * factor.Factor.Int
+				if factor.Factor.Type == lexer.IDENT {
+					result = result * resolve_variable_int(factors[0].Factor.Id, symbol_env)
+				} else {
+					result = result * factor.Factor.Int
+				}
 			}
 
 		case parser.DIV:
 			{
-				result = result / factor.Factor.Int
+				if factor.Factor.Type == lexer.IDENT {
+					result = result / resolve_variable_int(factors[0].Factor.Id, symbol_env)
+				} else {
+					result = result / factor.Factor.Int
+				}
+
 			}
 		}
 
@@ -44,12 +98,12 @@ func Arith_Factors_INT(factors []parser.TermElement, variable_map type_checker.V
 	return result
 }
 
-func Arith_Factors_STRING(factors []parser.TermElement, variable_map type_checker.Variable_Table) string {
+func Arith_Factors_STRING(factors []parser.TermElement, symbol_env *object.Symbol_Env) string {
 
 	if len(factors) == 1 {
 
 		if factors[0].Factor.Type == lexer.IDENT {
-			return variable_map[factors[0].Factor.Id].String
+			return resolve_variable_string(factors[0].Factor.Id, symbol_env)
 		}
 
 		return factors[0].Factor.String
@@ -58,12 +112,12 @@ func Arith_Factors_STRING(factors []parser.TermElement, variable_map type_checke
 	return ""
 }
 
-func Arith_Factors_BOOL(factors []parser.TermElement, variable_map type_checker.Variable_Table) bool {
+func Arith_Factors_BOOL(factors []parser.TermElement, symbol_env *object.Symbol_Env) bool {
 
 	if len(factors) == 1 {
 
 		if factors[0].Factor.Type == lexer.IDENT {
-			return variable_map[factors[0].Factor.Id].Bool
+			return resolve_variable_bool(factors[0].Factor.Id, symbol_env)
 		}
 
 		return factors[0].Factor.Bool
@@ -72,14 +126,30 @@ func Arith_Factors_BOOL(factors []parser.TermElement, variable_map type_checker.
 	return true
 }
 
-func Arith_Factors_DOUBLE(factors []parser.TermElement, variable_map type_checker.Variable_Table) float64 {
+func resolve_variable_double(id string, symbol_env *object.Symbol_Env) object.Variable {
+	if factor, ok := symbol_env.Table[id]; ok {
+		return factor
+	} else {
+		if symbol_env.Parent_Env != nil {
+			return resolve_variable_double(id, symbol_env.Parent_Env)
+
+		}
+
+		fmt.Printf("\nnot defined variable %v\n", id)
+		os.Exit(1)
+
+	}
+	return object.Variable{}
+
+}
+
+func Arith_Factors_DOUBLE(factors []parser.TermElement, symbol_env *object.Symbol_Env) float64 {
 
 	if len(factors) == 1 {
 
 		if factors[0].Factor.Type == lexer.IDENT {
-			if variable_map[factors[0].Factor.Id].Type == basic_type.DOUBLE {
-				return variable_map[factors[0].Factor.Id].Double
-			}
+			double := resolve_variable_double(factors[0].Factor.Id, symbol_env)
+			return double.Double
 		}
 
 		return factors[0].Factor.Float
@@ -94,10 +164,12 @@ func Arith_Factors_DOUBLE(factors []parser.TermElement, variable_map type_checke
 
 			case lexer.IDENT:
 				{
-					if variable_map[factor.Factor.Id].Type == basic_type.DOUBLE {
-						result = variable_map[factor.Factor.Id].Double
-					} else if variable_map[factor.Factor.Id].Type == basic_type.INT {
-						result = float64(variable_map[factor.Factor.Id].Int)
+					variable := resolve_variable_double(factor.Factor.Id, symbol_env)
+
+					if variable.Type == basic_type.DOUBLE {
+						result = variable.Double
+					} else if variable.Type == basic_type.INT {
+						result = float64(variable.Int)
 					}
 
 				}
@@ -119,10 +191,12 @@ func Arith_Factors_DOUBLE(factors []parser.TermElement, variable_map type_checke
 				switch factor.Factor.Type {
 				case lexer.IDENT:
 					{
-						if variable_map[factor.Factor.Id].Type == basic_type.DOUBLE {
-							result = result * variable_map[factor.Factor.Id].Double
-						} else if variable_map[factor.Factor.Id].Type == basic_type.INT {
-							result = result * float64(variable_map[factor.Factor.Id].Int)
+						variable := resolve_variable_double(factor.Factor.Id, symbol_env)
+
+						if variable.Type == basic_type.DOUBLE {
+							result = result * variable.Double
+						} else if variable.Type == basic_type.INT {
+							result = result * float64(variable.Int)
 						}
 
 					}
@@ -144,12 +218,13 @@ func Arith_Factors_DOUBLE(factors []parser.TermElement, variable_map type_checke
 				switch factor.Factor.Type {
 				case lexer.IDENT:
 					{
-						if variable_map[factor.Factor.Id].Type == basic_type.DOUBLE {
-							result = result / variable_map[factor.Factor.Id].Double
-						} else if variable_map[factor.Factor.Id].Type == basic_type.INT {
-							result = result / float64(variable_map[factor.Factor.Id].Int)
-						}
+						variable := resolve_variable_double(factor.Factor.Id, symbol_env)
 
+						if variable.Type == basic_type.DOUBLE {
+							result = result / variable.Double
+						} else if variable.Type == basic_type.INT {
+							result = result / float64(variable.Int)
+						}
 					}
 
 				case lexer.INT:
@@ -168,28 +243,28 @@ func Arith_Factors_DOUBLE(factors []parser.TermElement, variable_map type_checke
 	return result
 }
 
-func Arith_Terms_INT(terms []parser.ArithElement, variable_map type_checker.Variable_Table) int {
+func Arith_Terms_INT(terms []parser.ArithElement, symbol_env *object.Symbol_Env) int {
 
 	if len(terms) == 1 {
-		return Arith_Factors_INT(terms[0].Term.Factors, variable_map)
+		return Arith_Factors_INT(terms[0].Term.Factors, symbol_env)
 	}
 
 	var result int
 
 	for i, term := range terms {
 		if i == 0 {
-			result = Arith_Factors_INT(term.Term.Factors, variable_map)
+			result = Arith_Factors_INT(term.Term.Factors, symbol_env)
 			continue
 		}
 		switch term.Op {
 		case parser.ADD:
 			{
-				result = result + Arith_Factors_INT(term.Term.Factors, variable_map)
+				result = result + Arith_Factors_INT(term.Term.Factors, symbol_env)
 			}
 
 		case parser.SUB:
 			{
-				result = result - Arith_Factors_INT(term.Term.Factors, variable_map)
+				result = result - Arith_Factors_INT(term.Term.Factors, symbol_env)
 			}
 		}
 
@@ -197,10 +272,10 @@ func Arith_Terms_INT(terms []parser.ArithElement, variable_map type_checker.Vari
 	return result
 }
 
-func Arith_Terms_DOUBLE(terms []parser.ArithElement, variable_map type_checker.Variable_Table) float64 {
+func Arith_Terms_DOUBLE(terms []parser.ArithElement, symbol_env *object.Symbol_Env) float64 {
 
 	if len(terms) == 1 {
-		return Arith_Factors_DOUBLE(terms[0].Term.Factors, variable_map)
+		return Arith_Factors_DOUBLE(terms[0].Term.Factors, symbol_env)
 	}
 
 	var result float64
@@ -209,9 +284,9 @@ func Arith_Terms_DOUBLE(terms []parser.ArithElement, variable_map type_checker.V
 		//		fmt.Printf("%+v\n", term)
 		if i == 0 {
 			if term.Term.Type == basic_type.INT {
-				result = float64(Arith_Factors_INT(term.Term.Factors, variable_map))
+				result = float64(Arith_Factors_INT(term.Term.Factors, symbol_env))
 			} else if term.Term.Type == basic_type.DOUBLE {
-				result = Arith_Factors_DOUBLE(term.Term.Factors, variable_map)
+				result = Arith_Factors_DOUBLE(term.Term.Factors, symbol_env)
 			}
 			continue
 		}
@@ -219,18 +294,18 @@ func Arith_Terms_DOUBLE(terms []parser.ArithElement, variable_map type_checker.V
 		case parser.ADD:
 			{
 				if term.Term.Type == basic_type.INT {
-					result = result + float64(Arith_Factors_INT(term.Term.Factors, variable_map))
+					result = result + float64(Arith_Factors_INT(term.Term.Factors, symbol_env))
 				} else if term.Term.Type == basic_type.DOUBLE {
-					result = result + Arith_Factors_DOUBLE(term.Term.Factors, variable_map)
+					result = result + Arith_Factors_DOUBLE(term.Term.Factors, symbol_env)
 				}
 			}
 
 		case parser.SUB:
 			{
 				if term.Term.Type == basic_type.INT {
-					result = result - float64(Arith_Factors_INT(term.Term.Factors, variable_map))
+					result = result - float64(Arith_Factors_INT(term.Term.Factors, symbol_env))
 				} else if term.Term.Type == basic_type.DOUBLE {
-					result = result - Arith_Factors_DOUBLE(term.Term.Factors, variable_map)
+					result = result - Arith_Factors_DOUBLE(term.Term.Factors, symbol_env)
 				}
 			}
 		}
@@ -239,10 +314,10 @@ func Arith_Terms_DOUBLE(terms []parser.ArithElement, variable_map type_checker.V
 	return result
 }
 
-func Arith_Terms_STRING(terms []parser.ArithElement, variable_map type_checker.Variable_Table) string {
+func Arith_Terms_STRING(terms []parser.ArithElement, symbol_env *object.Symbol_Env) string {
 
 	if len(terms) == 1 {
-		return Arith_Factors_STRING(terms[0].Term.Factors, variable_map)
+		return Arith_Factors_STRING(terms[0].Term.Factors, symbol_env)
 	}
 
 	var result string
@@ -250,13 +325,13 @@ func Arith_Terms_STRING(terms []parser.ArithElement, variable_map type_checker.V
 	for i, term := range terms {
 		//		fmt.Printf("%+v\n", term)
 		if i == 0 {
-			result = Arith_Factors_STRING(term.Term.Factors, variable_map)
+			result = Arith_Factors_STRING(term.Term.Factors, symbol_env)
 			continue
 		}
 		switch term.Op {
 		case parser.ADD:
 			{
-				result = result + Arith_Factors_STRING(term.Term.Factors, variable_map)
+				result = result + Arith_Factors_STRING(term.Term.Factors, symbol_env)
 			}
 
 		case parser.SUB:
@@ -269,10 +344,10 @@ func Arith_Terms_STRING(terms []parser.ArithElement, variable_map type_checker.V
 	return result
 }
 
-func Arith_Terms_BOOL(terms []parser.ArithElement, variable_map type_checker.Variable_Table) bool {
+func Arith_Terms_BOOL(terms []parser.ArithElement, symbol_env *object.Symbol_Env) bool {
 
 	if len(terms) == 1 {
-		return Arith_Factors_BOOL(terms[0].Term.Factors, variable_map)
+		return Arith_Factors_BOOL(terms[0].Term.Factors, symbol_env)
 	}
 
 	os.Exit(1)
@@ -281,20 +356,20 @@ func Arith_Terms_BOOL(terms []parser.ArithElement, variable_map type_checker.Var
 
 }
 
-func Eval_Cmp(cmp_expr parser.Cmp_expr, variable_map type_checker.Variable_Table) bool {
+func Eval_Cmp(cmp_expr parser.Cmp_expr, symbol_env *object.Symbol_Env) bool {
 	if len(cmp_expr.Ariths) == 1 {
-		return Arith_Terms_BOOL(cmp_expr.Ariths[0].Arith.Terms, variable_map)
+		return Arith_Terms_BOOL(cmp_expr.Ariths[0].Arith.Terms, symbol_env)
 	}
 
 	switch cmp_expr.Ariths[0].Arith.Type {
 	case basic_type.INT:
 		{
-			cmp1 := Arith_Terms_INT(cmp_expr.Ariths[0].Arith.Terms, variable_map)
+			cmp1 := Arith_Terms_INT(cmp_expr.Ariths[0].Arith.Terms, symbol_env)
 
 			if cmp_expr.Ariths[1].Arith.Type != basic_type.INT {
 				os.Exit(1)
 			} else {
-				cmp2 := Arith_Terms_INT(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+				cmp2 := Arith_Terms_INT(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
 
 				if cmp1 == cmp2 {
 					return true
@@ -307,12 +382,12 @@ func Eval_Cmp(cmp_expr parser.Cmp_expr, variable_map type_checker.Variable_Table
 		}
 	case basic_type.DOUBLE:
 		{
-			cmp1 := Arith_Terms_DOUBLE(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+			cmp1 := Arith_Terms_DOUBLE(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
 
 			if cmp_expr.Ariths[1].Arith.Type != basic_type.DOUBLE {
 				os.Exit(1)
 			} else {
-				cmp2 := Arith_Terms_DOUBLE(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+				cmp2 := Arith_Terms_DOUBLE(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
 
 				if cmp1 == cmp2 {
 					return true
@@ -325,12 +400,12 @@ func Eval_Cmp(cmp_expr parser.Cmp_expr, variable_map type_checker.Variable_Table
 		}
 	case basic_type.STRING:
 		{
-			cmp1 := Arith_Terms_STRING(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+			cmp1 := Arith_Terms_STRING(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
 
 			if cmp_expr.Ariths[1].Arith.Type != basic_type.STRING {
 				os.Exit(1)
 			} else {
-				cmp2 := Arith_Terms_STRING(cmp_expr.Ariths[1].Arith.Terms, variable_map)
+				cmp2 := Arith_Terms_STRING(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
 
 				if cmp1 == cmp2 {
 					return true
@@ -346,28 +421,28 @@ func Eval_Cmp(cmp_expr parser.Cmp_expr, variable_map type_checker.Variable_Table
 	return true
 }
 
-func Eval_Stmts(stmts []parser.Stmt, variable_map type_checker.Variable_Table) {
+func Eval_Stmts(stmts []parser.Stmt, symbol_env *object.Symbol_Env) {
 
 	for _, stmt := range stmts {
-		Eval_Stmt(stmt, variable_map)
+		Eval_Stmt(stmt, symbol_env)
 	}
 }
 
-func Eval_Stmt(stmt parser.Stmt, variable_map type_checker.Variable_Table) {
+func Eval_Stmt(stmt parser.Stmt, symbol_env *object.Symbol_Env) {
 
 	switch stmt.Type {
 
 	case parser.FOR_STMT:
 		{
-			for Eval_Cmp(stmt.For.Cmp_expr, variable_map) {
-				Eval_Stmts(stmt.For.Stmts, variable_map)
+			for Eval_Cmp(stmt.For.Cmp_expr, symbol_env) {
+				Eval_Stmts(stmt.For.Stmts, stmt.For.Symbol_Env)
 			}
 
 		}
 	case parser.IF_STMT:
 		{
-			if Eval_Cmp(stmt.If.Cmp_expr, variable_map) {
-				Eval_Stmts(stmt.If.Stmts, variable_map)
+			if Eval_Cmp(stmt.If.Cmp_expr, symbol_env) {
+				Eval_Stmts(stmt.If.Stmts, stmt.If.Symbol_Env)
 			}
 		}
 
@@ -377,24 +452,24 @@ func Eval_Stmt(stmt parser.Stmt, variable_map type_checker.Variable_Table) {
 			switch stmt.Decl.Expr.Type {
 			case basic_type.INT:
 				{
-					result := Arith_Terms_INT(stmt.Decl.Expr.Terms, variable_map)
-					variable_map[stmt.Decl.Id] = type_checker.Variable{Int: result, Type: basic_type.INT}
+					result := Arith_Terms_INT(stmt.Decl.Expr.Terms, symbol_env)
+					symbol_env.Table[stmt.Decl.Id] = object.Variable{Int: result, Type: basic_type.INT}
 
 					fmt.Printf("%+v", result)
 
 				}
 			case basic_type.DOUBLE:
 				{
-					result := Arith_Terms_DOUBLE(stmt.Decl.Expr.Terms, variable_map)
-					variable_map[stmt.Decl.Id] = type_checker.Variable{Double: result, Type: basic_type.DOUBLE}
+					result := Arith_Terms_DOUBLE(stmt.Decl.Expr.Terms, symbol_env)
+					symbol_env.Table[stmt.Decl.Id] = object.Variable{Double: result, Type: basic_type.DOUBLE}
 
 					fmt.Printf("%+v", result)
 
 				}
 			case basic_type.STRING:
 				{
-					result := Arith_Terms_STRING(stmt.Decl.Expr.Terms, variable_map)
-					variable_map[stmt.Decl.Id] = type_checker.Variable{String: result, Type: basic_type.STRING}
+					result := Arith_Terms_STRING(stmt.Decl.Expr.Terms, symbol_env)
+					symbol_env.Table[stmt.Decl.Id] = object.Variable{String: result, Type: basic_type.STRING}
 
 					fmt.Printf("%+v", result)
 
@@ -402,8 +477,8 @@ func Eval_Stmt(stmt parser.Stmt, variable_map type_checker.Variable_Table) {
 
 			case basic_type.BOOL:
 				{
-					result := Arith_Terms_BOOL(stmt.Decl.Expr.Terms, variable_map)
-					variable_map[stmt.Decl.Id] = type_checker.Variable{Bool: result, Type: basic_type.STRING}
+					result := Arith_Terms_BOOL(stmt.Decl.Expr.Terms, symbol_env)
+					symbol_env.Table[stmt.Decl.Id] = object.Variable{Bool: result, Type: basic_type.STRING}
 
 					fmt.Printf("%+v", result)
 
@@ -419,54 +494,34 @@ func Eval_Stmt(stmt parser.Stmt, variable_map type_checker.Variable_Table) {
 			switch stmt.Expr.Type {
 			case basic_type.INT:
 				{
-					result := Arith_Terms_INT(stmt.Expr.Terms, variable_map)
+					result := Arith_Terms_INT(stmt.Expr.Terms, symbol_env)
 					fmt.Printf("%+v", result)
 
 				}
 			case basic_type.DOUBLE:
 				{
-					result := Arith_Terms_DOUBLE(stmt.Expr.Terms, variable_map)
+					result := Arith_Terms_DOUBLE(stmt.Expr.Terms, symbol_env)
 
 					fmt.Printf("%+v", result)
 
 				}
 			case basic_type.STRING:
 				{
-					result := Arith_Terms_STRING(stmt.Expr.Terms, variable_map)
+					result := Arith_Terms_STRING(stmt.Expr.Terms, symbol_env)
 
 					fmt.Printf("%+v", result)
 
 				}
+			case basic_type.BOOL:
+				{
+					result := Arith_Terms_BOOL(stmt.Expr.Terms, symbol_env)
+
+					fmt.Printf("%+v", result)
+
+				}
+
 			}
 		}
 
 	}
-}
-
-func getClosure() func([]byte) {
-
-	regex_string := lexer.Get_Regex_String()
-
-	regex := regex.NewRegexWithParser(regex_string)
-
-	variable_table := type_checker.Variable_Table{}
-
-	return func(input []byte) {
-		string_input := string(input)
-		tokens := lexer.GetTokens(regex, string_input)
-		parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
-		stmt := parser.Parse_Stmt(&parser_input)
-
-		type_checker.Type_Check_Stmt(stmt, variable_table)
-
-		Eval_Stmt(stmt, variable_table)
-	}
-}
-
-func main() {
-
-	closure := getClosure()
-
-	readline.Readline(">>", closure)
-
 }

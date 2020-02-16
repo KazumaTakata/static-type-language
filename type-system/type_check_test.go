@@ -1,9 +1,10 @@
-package type_checker
+package type_system
 
 import (
 	"fmt"
 	"github.com/KazumaTakata/regex_virtualmachine"
 	"github.com/KazumaTakata/static-typed-language/lexer"
+	"github.com/KazumaTakata/static-typed-language/object"
 	"github.com/KazumaTakata/static-typed-language/parser"
 
 	"testing"
@@ -15,13 +16,13 @@ func TestLexer(t *testing.T) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	string_input := "var x int  = 3 + 3\n "
+	string_input := "var x int =1 \n "
 
 	tokens := lexer.GetTokens(regex, string_input)
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
 	stmts := parser.Parse_Stmts(&parser_input)
 
-	variable_map := Symbol_Env{Table: Variable_Table{}}
+	variable_map := object.Symbol_Env{Table: object.Variable_Table{}}
 
 	Type_Check_Stmts(stmts, &variable_map)
 
@@ -35,16 +36,18 @@ func TestFor(t *testing.T) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	string_input := "var x int = 3\n if 1 == 1 { var y int = 1 + z  } "
+	string_input := "var x int = 3\n if 1 == 1 { var y int = 1 + x  }\n"
 
 	tokens := lexer.GetTokens(regex, string_input)
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
 	stmts := parser.Parse_Stmts(&parser_input)
 
-	variable_map := Symbol_Env{Table: Variable_Table{}}
+	variable_map := object.Symbol_Env{Table: object.Variable_Table{}}
 
 	Type_Check_Stmts(stmts, &variable_map)
 
 	fmt.Printf("%+v\n", variable_map)
+
+	fmt.Printf("%+v\n", stmts[1].If.Symbol_Env)
 
 }

@@ -125,6 +125,8 @@ type Factor struct {
 	Id     string
 	Bool   bool
 	Type   lexer.TokenType
+	IsCall bool
+	Args   []lexer.Token
 }
 
 func Parse_Cmp_expr(tokens *Parser_Input) Cmp_expr {
@@ -256,7 +258,25 @@ func parse_Factor(tokens *Parser_Input) Factor {
 	case lexer.IDENT:
 		{
 			ident_token := tokens.next()
-			return Factor{Id: ident_token.Value, Type: lexer.IDENT}
+			if tokens.peek().Type == lexer.LPAREN {
+				tokens.eat(lexer.LPAREN)
+				args := []lexer.Token{}
+				for tokens.peek().Type != lexer.RPAREN {
+					id := tokens.next()
+					args = append(args, id)
+
+					if tokens.peek().Type != lexer.RPAREN {
+						tokens.eat(lexer.COMMA)
+					}
+				}
+				tokens.eat(lexer.RPAREN)
+
+				return Factor{Id: ident_token.Value, Type: lexer.IDENT, IsCall: true, Args: args}
+
+			} else {
+
+				return Factor{Id: ident_token.Value, Type: lexer.IDENT}
+			}
 		}
 	case lexer.BOOL:
 		{

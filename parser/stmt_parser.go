@@ -2,7 +2,9 @@ package parser
 
 import (
 	"fmt"
+
 	"github.com/KazumaTakata/static-typed-language/lexer"
+	"github.com/KazumaTakata/static-typed-language/object"
 	"github.com/KazumaTakata/static-typed-language/type"
 )
 
@@ -12,6 +14,7 @@ const (
 	DECL_STMT Stmt_Type = iota + 1
 	FOR_STMT
 	IF_STMT
+	DEF_STMT
 	EXPR
 )
 
@@ -26,6 +29,8 @@ func (e Stmt_Type) String() string {
 		return "FOR_STMT"
 	case IF_STMT:
 		return "IF_STMT"
+	case DEF_STMT:
+		return "DEF_STMT"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -33,13 +38,22 @@ func (e Stmt_Type) String() string {
 }
 
 type For_stmt struct {
-	Cmp_expr Cmp_expr
-	Stmts    []Stmt
+	Symbol_Env *object.Symbol_Env
+	Cmp_expr   Cmp_expr
+	Stmts      []Stmt
 }
 
 type If_stmt struct {
-	Cmp_expr Cmp_expr
-	Stmts    []Stmt
+	Symbol_Env *object.Symbol_Env
+	Cmp_expr   Cmp_expr
+	Stmts      []Stmt
+}
+
+type Def_stmt struct {
+	Id          string
+	Args        []Func_param
+	Stmts       []Stmt
+	Return_type basic_type.Type
 }
 
 type Stmt struct {
@@ -48,6 +62,7 @@ type Stmt struct {
 	Expr *Arith_expr
 	For  *For_stmt
 	If   *If_stmt
+	Def  *Def_stmt
 }
 
 type Decl_stmt struct {
@@ -80,6 +95,11 @@ func Parse_Stmts(tokens *Parser_Input) []Stmt {
 	}
 
 	return stmts
+}
+
+type Func_param struct {
+	Ident string
+	Type  basic_type.Type
 }
 
 func Parse_Stmt(tokens *Parser_Input) Stmt {
@@ -129,6 +149,34 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				if_expr := If_stmt{Cmp_expr: expr, Stmts: stmts}
 				stmt.If = &if_expr
 				stmt.Type = IF_STMT
+
+			}
+		case lexer.DEF:
+			{
+				tokens.eat(lexer.DEF)
+				func_name := tokens.assert_next(lexer.IDENT)
+				tokens.eat(lexer.LPAREN)
+				args := []Func_param{}
+				for tokens.peek().Type != lexer.RPAREN {
+					id := tokens.assert_next(lexer.IDENT)
+					id_type := tokens.assert_next(lexer.DECL_TYPE)
+					param := Func_param{Ident: id.Value, Type: getBasicType[id_type.Value]}
+					args = append(args, param)
+
+					if tokens.peek().Type != lexer.RPAREN {
+						tokens.eat(lexer.COMMA)
+					}
+				}
+				tokens.eat(lexer.RPAREN)
+				return_type := tokens.assert_next(lexer.DECL_TYPE)
+
+				tokens.eat(lexer.LCURL)
+				stmts := Parse_Stmts(tokens)
+				tokens.eat(lexer.RCURL)
+
+				def_expr := Def_stmt{Id: func_name.Value, Args: args, Stmts: stmts, Return_type: getBasicType[return_type.Value]}
+				stmt.Def = &def_expr
+				stmt.Type = DEF_STMT
 
 			}
 

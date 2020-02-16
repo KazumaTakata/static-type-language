@@ -23,8 +23,10 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"RPAREN", "\\)"})
 	lexer_rules = append(lexer_rules, []string{"LCURL", "\\{"})
 	lexer_rules = append(lexer_rules, []string{"RCURL", "\\}"})
+	lexer_rules = append(lexer_rules, []string{"COMMA", ","})
 
 	//keyword
+	lexer_rules = append(lexer_rules, []string{"DEF", "def"})
 	lexer_rules = append(lexer_rules, []string{"VAR", "var"})
 	lexer_rules = append(lexer_rules, []string{"IF", "if"})
 	lexer_rules = append(lexer_rules, []string{"FOR", "for"})
@@ -72,6 +74,8 @@ const (
 	EQUAL
 	NOTEQUAL
 	BOOL
+	COMMA
+	DEF
 )
 
 func (e TokenType) String() string {
@@ -119,6 +123,10 @@ func (e TokenType) String() string {
 		return "NOTEQUAL"
 	case BOOL:
 		return "BOOL"
+	case COMMA:
+		return "COMMA"
+	case DEF:
+		return "DEF"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -146,7 +154,8 @@ var tokenmap map[string]TokenType = map[string]TokenType{
 	"RCURL":     RCURL,
 	"EQUAL":     EQUAL,
 	"NOTEQUAL":  NOTEQUAL,
-	"BOOL":      BOOL,
+	"COMMA":     COMMA,
+	"DEF":       DEF,
 }
 
 type Token struct {
