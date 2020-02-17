@@ -2,13 +2,13 @@
 
 var x int = 1
 
-def add() int {
-   return 3
+def add(z int, a int) int {
+   return a + z 
 }
 
-add()
+var y int = add(30, 20) 
 
-x
+y
 
 
 

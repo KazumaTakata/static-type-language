@@ -172,7 +172,7 @@ func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, symbol_env *parser.Symbol_Env) ba
 func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, symbol_env *parser.Symbol_Env) basic_type.Type {
 
 	if len(ariths) == 1 {
-		return Type_Check_Arith_Terms(ariths[0].Arith.Terms, symbol_env)
+		return Type_Check_Arith(&ariths[0].Arith, symbol_env)
 	}
 
 	var operand1_type basic_type.Type

@@ -68,6 +68,7 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 
 	case parser.RETURN_STMT:
 		{
+			//_ = Type_Check_Arith(&stmt.Return.Cmp_expr.Ariths[0].Arith, symbol_env)
 			_ = Type_Check_Cmp(&stmt.Return.Cmp_expr, symbol_env)
 
 			stmt.Return.Type = stmt.Return.Cmp_expr.Type
