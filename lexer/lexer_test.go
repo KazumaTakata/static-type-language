@@ -32,7 +32,7 @@ func TestLexer(t *testing.T) {
 
 	fmt.Printf("%+v\n", tokens)
 
-	tokens = GetTokens(regex, "def add(a int, b int) {}")
+	tokens = GetTokens(regex, "def add(a int, b int) { return a }")
 
 	fmt.Printf("%+v\n", tokens)
 

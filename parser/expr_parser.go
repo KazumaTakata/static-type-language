@@ -258,7 +258,7 @@ func parse_Factor(tokens *Parser_Input) Factor {
 	case lexer.IDENT:
 		{
 			ident_token := tokens.next()
-			if tokens.peek().Type == lexer.LPAREN {
+			if !tokens.empty() && tokens.peek().Type == lexer.LPAREN {
 				tokens.eat(lexer.LPAREN)
 				args := []lexer.Token{}
 				for tokens.peek().Type != lexer.RPAREN {

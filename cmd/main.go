@@ -5,7 +5,6 @@ import (
 	"github.com/KazumaTakata/readline"
 	"github.com/KazumaTakata/regex_virtualmachine"
 	"github.com/KazumaTakata/static-typed-language/lexer"
-	"github.com/KazumaTakata/static-typed-language/object"
 	"github.com/KazumaTakata/static-typed-language/parser"
 	"github.com/KazumaTakata/static-typed-language/tree-eval"
 	"github.com/KazumaTakata/static-typed-language/type-system"
@@ -20,7 +19,7 @@ func getClosure() func([]byte) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	symbol_env := object.Symbol_Env{Table: object.Variable_Table{}}
+	symbol_env := parser.Symbol_Env{Table: parser.Symbol_Table{}}
 
 	return func(input []byte) {
 		string_input := string(input)
@@ -39,7 +38,7 @@ func run_program(input []byte) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	symbol_env := object.Symbol_Env{Table: object.Variable_Table{}}
+	symbol_env := parser.Symbol_Env{Table: parser.Symbol_Table{}}
 
 	string_input := string(input)
 	tokens := lexer.GetTokens(regex, string_input)

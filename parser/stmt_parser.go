@@ -15,6 +15,7 @@ const (
 	IF_STMT
 	DEF_STMT
 	EXPR
+	RETURN_STMT
 )
 
 func (e Stmt_Type) String() string {
@@ -30,6 +31,8 @@ func (e Stmt_Type) String() string {
 		return "IF_STMT"
 	case DEF_STMT:
 		return "DEF_STMT"
+	case RETURN_STMT:
+		return "RETURN_STMT"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -48,24 +51,32 @@ type If_stmt struct {
 	Stmts      []Stmt
 }
 
+type Return_stmt struct {
+	Type     basic_type.Type
+	Cmp_expr Cmp_expr
+}
+
 type Stmt struct {
-	Type Stmt_Type
-	Decl *Decl_stmt
-	Expr *Arith_expr
-	For  *For_stmt
-	If   *If_stmt
-	Def  *Def_stmt
+	Type   Stmt_Type
+	Decl   *Decl_stmt
+	Expr   *Arith_expr
+	For    *For_stmt
+	If     *If_stmt
+	Def    *Def_stmt
+	Return *Return_stmt
 }
 type Func_param struct {
 	Ident string
 	Type  basic_type.Type
 }
+
 type Def_stmt struct {
-	Symbol_Env  *Symbol_Env
-	Id          string
-	Args        []Func_param
-	Stmts       []Stmt
-	Return_type basic_type.Type
+	Symbol_Env   *Symbol_Env
+	Id           string
+	Args         []Func_param
+	Stmts        []Stmt
+	Return_type  basic_type.Type
+	Return_value *Object
 }
 
 type Decl_stmt struct {
@@ -147,6 +158,16 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				if_expr := If_stmt{Cmp_expr: expr, Stmts: stmts}
 				stmt.If = &if_expr
 				stmt.Type = IF_STMT
+
+			}
+
+		case lexer.RETURN:
+			{
+				tokens.eat(lexer.RETURN)
+				expr := Parse_Cmp_expr(tokens)
+				return_stmt := Return_stmt{Cmp_expr: expr}
+				stmt.Return = &return_stmt
+				stmt.Type = RETURN_STMT
 
 			}
 		case lexer.DEF:

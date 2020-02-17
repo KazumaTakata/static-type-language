@@ -65,6 +65,20 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 			Type_Check_Stmts(stmt.If.Stmts, Child_env)
 
 		}
+
+	case parser.RETURN_STMT:
+		{
+			_ = Type_Check_Cmp(&stmt.Return.Cmp_expr, symbol_env)
+
+			stmt.Return.Type = stmt.Return.Cmp_expr.Type
+
+			if symbol_env.Return_Type != stmt.Return.Type {
+				fmt.Printf("func return type mismatch :expect %+v, got%+v\n", symbol_env.Return_Type, stmt.Return.Type)
+				os.Exit(1)
+
+			}
+
+		}
 	case parser.DEF_STMT:
 		{
 
@@ -77,6 +91,7 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 				Child_env.Table[arg.Ident] = parser.Object{Type: parser.VariableObj, Variable: &parser.Variable{Type: arg.Type}}
 			}
 
+			Child_env.Return_Type = function.Function.Return_type
 			stmt.Def.Symbol_Env = Child_env
 			Type_Check_Stmts(stmt.Def.Stmts, Child_env)
 

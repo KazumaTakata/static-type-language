@@ -30,6 +30,8 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"VAR", "var"})
 	lexer_rules = append(lexer_rules, []string{"IF", "if"})
 	lexer_rules = append(lexer_rules, []string{"FOR", "for"})
+	lexer_rules = append(lexer_rules, []string{"RETURN", "return"})
+
 	lexer_rules = append(lexer_rules, []string{"BOOL", "true|false"})
 
 	//type
@@ -76,6 +78,7 @@ const (
 	BOOL
 	COMMA
 	DEF
+	RETURN
 )
 
 func (e TokenType) String() string {
@@ -127,6 +130,8 @@ func (e TokenType) String() string {
 		return "COMMA"
 	case DEF:
 		return "DEF"
+	case RETURN:
+		return "RETURN"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -156,6 +161,7 @@ var tokenmap map[string]TokenType = map[string]TokenType{
 	"NOTEQUAL":  NOTEQUAL,
 	"COMMA":     COMMA,
 	"DEF":       DEF,
+	"RETURN":    RETURN,
 }
 
 type Token struct {

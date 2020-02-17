@@ -41,6 +41,8 @@ type Variable struct {
 }
 
 type Symbol_Env struct {
-	Table      Symbol_Table
-	Parent_Env *Symbol_Env
+	Table        Symbol_Table
+	Parent_Env   *Symbol_Env
+	Return_Value *Object
+	Return_Type  basic_type.Type
 }
