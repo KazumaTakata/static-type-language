@@ -27,7 +27,9 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 			var_type := stmt.Decl.Type
 			expr_type := Type_Check_Arith(stmt.Decl.Expr, symbol_env)
 
-			symbol_env.Table[stmt.Decl.Id] = parser.Variable{Type: var_type}
+			variable := parser.Variable{Type: var_type}
+
+			symbol_env.Table[stmt.Decl.Id] = parser.Object{Type: parser.VariableObj, Variable: &variable}
 
 			if var_type != expr_type {
 				fmt.Printf("%+v value can not assigned to %+v variable\n", expr_type, var_type)
@@ -44,7 +46,7 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 				os.Exit(1)
 			}
 
-			Child_env := &parser.Symbol_Env{Table: parser.Variable_Table{}, Parent_Env: symbol_env}
+			Child_env := &parser.Symbol_Env{Table: parser.Symbol_Table{}, Parent_Env: symbol_env}
 			stmt.For.Symbol_Env = Child_env
 			Type_Check_Stmts(stmt.For.Stmts, Child_env)
 
@@ -58,9 +60,25 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 				os.Exit(1)
 			}
 
-			Child_env := &parser.Symbol_Env{Table: parser.Variable_Table{}, Parent_Env: symbol_env}
+			Child_env := &parser.Symbol_Env{Table: parser.Symbol_Table{}, Parent_Env: symbol_env}
 			stmt.If.Symbol_Env = Child_env
 			Type_Check_Stmts(stmt.If.Stmts, Child_env)
+
+		}
+	case parser.DEF_STMT:
+		{
+
+			function := parser.Object{Type: parser.FunctionObj, Function: stmt.Def}
+			symbol_env.Table[stmt.Def.Id] = function
+
+			Child_env := &parser.Symbol_Env{Table: parser.Symbol_Table{}, Parent_Env: symbol_env}
+
+			for _, arg := range stmt.Def.Args {
+				Child_env.Table[arg.Ident] = parser.Object{Type: parser.VariableObj, Variable: &parser.Variable{Type: arg.Type}}
+			}
+
+			stmt.Def.Symbol_Env = Child_env
+			Type_Check_Stmts(stmt.Def.Stmts, Child_env)
 
 		}
 

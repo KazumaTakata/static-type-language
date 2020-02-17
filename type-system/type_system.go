@@ -100,9 +100,9 @@ func Type_Check_Cmp_Arith(term1_type basic_type.Type, term2_type basic_type.Type
 
 }
 
-func resolve_name(id string, symbol_env *parser.Symbol_Env) basic_type.Type {
-	if factor, ok := symbol_env.Table[id]; ok {
-		return factor.Type
+func resolve_name(id string, symbol_env *parser.Symbol_Env) parser.Object {
+	if object, ok := symbol_env.Table[id]; ok {
+		return object
 	} else {
 		if symbol_env.Parent_Env != nil {
 			return resolve_name(id, symbol_env.Parent_Env)
@@ -113,13 +113,49 @@ func resolve_name(id string, symbol_env *parser.Symbol_Env) basic_type.Type {
 
 	}
 
-	return basic_type.INT
+	return parser.Object{}
 }
 
 func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) basic_type.Type {
 
 	if factor.Type == lexer.IDENT {
-		return resolve_name(factor.Id, symbol_env)
+
+		object := resolve_name(factor.Id, symbol_env)
+
+		if factor.IsCall {
+			if object.Type != parser.FunctionObj {
+				fmt.Printf("\nvariable %s is not function\n", factor.Id)
+				os.Exit(1)
+			}
+			params := factor.Args
+			function := object.Function
+
+			for i, arg := range function.Args {
+				param := params[i]
+				if param.Type == lexer.IDENT {
+					param_object := resolve_name(param.Value, symbol_env)
+					switch param_object.Type {
+					case parser.VariableObj:
+						{
+							if param_object.Variable.Type != arg.Type {
+								fmt.Printf("\nparam type mismatch:variable of type %v can not be passed as param of type %v\n", param_object.Variable.Type, arg.Type)
+								os.Exit(1)
+							}
+						}
+					}
+
+				} else {
+					if arg.Type != basic_type.LexerTypeToType[params[i].Type] {
+						fmt.Printf("\nparam type mismatch: %v can not be passed as type %v\n", param.Type, arg.Type)
+						os.Exit(1)
+					}
+				}
+
+			}
+
+		} else {
+			return object.Variable.Type
+		}
 	}
 
 	return basic_type.LexerTypeToType[factor.Type]
