@@ -61,6 +61,7 @@ type Func_param struct {
 	Type  basic_type.Type
 }
 type Def_stmt struct {
+	Symbol_Env  *Symbol_Env
 	Id          string
 	Args        []Func_param
 	Stmts       []Stmt

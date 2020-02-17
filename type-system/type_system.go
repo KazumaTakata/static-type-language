@@ -141,6 +141,7 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 								fmt.Printf("\nparam type mismatch:variable of type %v can not be passed as param of type %v\n", param_object.Variable.Type, arg.Type)
 								os.Exit(1)
 							}
+
 						}
 					}
 
@@ -152,7 +153,7 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 				}
 
 			}
-
+			return function.Return_type
 		} else {
 			return object.Variable.Type
 		}

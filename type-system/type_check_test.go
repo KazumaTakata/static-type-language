@@ -77,7 +77,7 @@ func TestCall(t *testing.T) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	string_input := "def add(a int, b int) int { var c int = a + b  }\n var a int = 2 \n var b int =3 \n add(a, b) \n"
+	string_input := "def add(a int, b int) int { var c int = a + b  }\n var a int = 2 \n var b int =3 \n add(a, b)+2 \n"
 
 	tokens := lexer.GetTokens(regex, string_input)
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
