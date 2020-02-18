@@ -164,44 +164,22 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 
 func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, symbol_env *parser.Symbol_Env) basic_type.Type {
 
-	cmp_expr.Type = Type_Check_Cmp_Ariths(cmp_expr.Ariths, symbol_env)
+	left_type := Type_Check_Arith(cmp_expr.Left, symbol_env)
+
+	if cmp_expr.Right != nil {
+		right_type := Type_Check_Arith(cmp_expr.Right, symbol_env)
+		if left_type != right_type {
+			fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", left_type, cmp_expr.Op, right_type)
+			os.Exit(1)
+		} else {
+			cmp_expr.Type = basic_type.BOOL
+			return cmp_expr.Type
+		}
+	}
+
+	cmp_expr.Type = left_type
 
 	return cmp_expr.Type
-}
-
-func Type_Check_Cmp_Ariths(ariths []parser.CmpElement, symbol_env *parser.Symbol_Env) basic_type.Type {
-
-	if len(ariths) == 1 {
-		return Type_Check_Arith(&ariths[0].Arith, symbol_env)
-	}
-
-	var operand1_type basic_type.Type
-	var operand2_type basic_type.Type
-
-	for i, arith := range ariths {
-		if i == 0 {
-			operand1_type = Type_Check_Arith_Terms(arith.Arith.Terms, symbol_env)
-			ariths[i].Arith.Type = operand1_type
-			continue
-		}
-
-		operand2_type = operand1_type
-
-		operand1_type = Type_Check_Arith_Terms(arith.Arith.Terms, symbol_env)
-		ariths[i].Arith.Type = operand1_type
-
-		if operand1_type != operand2_type {
-
-			fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", operand2_type, arith.Op, operand1_type)
-			os.Exit(1)
-
-		} else {
-			operand1_type = basic_type.BOOL
-		}
-	}
-
-	return operand1_type
-
 }
 
 func Type_Check_Arith(arith *parser.Arith_expr, symbol_env *parser.Symbol_Env) basic_type.Type {

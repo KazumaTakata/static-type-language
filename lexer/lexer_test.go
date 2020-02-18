@@ -36,4 +36,8 @@ func TestLexer(t *testing.T) {
 
 	fmt.Printf("%+v\n", tokens)
 
+	tokens = GetTokens(regex, " true||false ")
+
+	fmt.Printf("%+v\n", tokens)
+
 }

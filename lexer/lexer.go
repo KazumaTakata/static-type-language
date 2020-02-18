@@ -18,6 +18,9 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"SUB", "\\-"})
 	lexer_rules = append(lexer_rules, []string{"MUL", "\\*"})
 	lexer_rules = append(lexer_rules, []string{"DIV", "\\/"})
+	lexer_rules = append(lexer_rules, []string{"OR", "\\|\\|"})
+	lexer_rules = append(lexer_rules, []string{"AND", "&&"})
+
 	lexer_rules = append(lexer_rules, []string{"NEWLINE", "\n"})
 	lexer_rules = append(lexer_rules, []string{"LPAREN", "\\("})
 	lexer_rules = append(lexer_rules, []string{"RPAREN", "\\)"})
@@ -31,7 +34,6 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"IF", "if"})
 	lexer_rules = append(lexer_rules, []string{"FOR", "for"})
 	lexer_rules = append(lexer_rules, []string{"RETURN", "return"})
-
 	lexer_rules = append(lexer_rules, []string{"BOOL", "true|false"})
 
 	//type
@@ -79,6 +81,8 @@ const (
 	COMMA
 	DEF
 	RETURN
+	AND
+	OR
 )
 
 func (e TokenType) String() string {
@@ -132,6 +136,10 @@ func (e TokenType) String() string {
 		return "DEF"
 	case RETURN:
 		return "RETURN"
+	case OR:
+		return "OR"
+	case AND:
+		return "AND"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -162,6 +170,9 @@ var tokenmap map[string]TokenType = map[string]TokenType{
 	"COMMA":     COMMA,
 	"DEF":       DEF,
 	"RETURN":    RETURN,
+	"OR":        OR,
+	"AND":       AND,
+	"BOOL":      BOOL,
 }
 
 type Token struct {
@@ -222,7 +233,4 @@ func GetTokens(Regex regex.Regex, input string) []Token {
 		tokens = append(tokens, token)
 	}
 	return tokens
-}
-
-func NewLexer() {
 }

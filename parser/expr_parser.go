@@ -89,13 +89,10 @@ func (e TermOp) String() string {
 }
 
 type Cmp_expr struct {
-	Ariths []CmpElement
-	Type   basic_type.Type
-}
-
-type CmpElement struct {
-	Arith Arith_expr
+	Left  *Arith_expr
+	Right *Arith_expr
 	Op    ArithOp
+	Type  basic_type.Type
 }
 
 type Arith_expr struct {
@@ -131,11 +128,11 @@ type Factor struct {
 
 func Parse_Cmp_expr(tokens *Parser_Input) Cmp_expr {
 
-	ariths := []CmpElement{}
+	cmp_expr := Cmp_expr{}
 	arith := Parse_Arith_expr(tokens)
-	ariths = append(ariths, CmpElement{Arith: arith, Op: ANONE})
+	cmp_expr.Left = &arith
 
-	for !tokens.empty() && tokens.peek().Type != lexer.LCURL && tokens.peek().Type != lexer.NEWLINE && (tokens.peek().Type == lexer.EQUAL || tokens.peek().Type == lexer.NOTEQUAL) {
+	if !tokens.empty() && (tokens.peek().Type == lexer.EQUAL || tokens.peek().Type == lexer.NOTEQUAL) {
 		op := tokens.next()
 		var aop ArithOp
 		switch op.Type {
@@ -155,7 +152,8 @@ func Parse_Cmp_expr(tokens *Parser_Input) Cmp_expr {
 		}
 
 		arith := Parse_Arith_expr(tokens)
-		ariths = append(ariths, CmpElement{Arith: arith, Op: aop})
+		cmp_expr.Right = &arith
+		cmp_expr.Op = aop
 
 	}
 
@@ -163,7 +161,7 @@ func Parse_Cmp_expr(tokens *Parser_Input) Cmp_expr {
 		tokens.eat(lexer.NEWLINE)
 	}
 
-	return Cmp_expr{Ariths: ariths}
+	return cmp_expr
 }
 
 func Parse_Arith_expr(tokens *Parser_Input) Arith_expr {

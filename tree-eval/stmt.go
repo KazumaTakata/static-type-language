@@ -61,7 +61,7 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 		}
 	case parser.RETURN_STMT:
 		{
-			return_value := Calc_Arith(&stmt.Return.Cmp_expr.Ariths[0].Arith, symbol_env)
+			return_value := Calc_Arith(stmt.Return.Cmp_expr.Left, symbol_env)
 			symbol_env.Return_Value = &return_value
 
 			return true
@@ -70,14 +70,14 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 
 	case parser.FOR_STMT:
 		{
-			for Eval_Cmp(stmt.For.Cmp_expr, symbol_env) {
+			for Eval_Cmp_Bool(stmt.For.Cmp_expr, symbol_env) {
 				Eval_Stmts(stmt.For.Stmts, stmt.For.Symbol_Env)
 			}
 
 		}
 	case parser.IF_STMT:
 		{
-			if Eval_Cmp(stmt.If.Cmp_expr, symbol_env) {
+			if Eval_Cmp_Bool(stmt.If.Cmp_expr, symbol_env) {
 				Eval_Stmts(stmt.If.Stmts, stmt.If.Symbol_Env)
 			}
 		}

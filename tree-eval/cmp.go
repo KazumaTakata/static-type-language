@@ -6,20 +6,20 @@ import (
 	"os"
 )
 
-func Eval_Cmp(cmp_expr parser.Cmp_expr, symbol_env *parser.Symbol_Env) bool {
-	if len(cmp_expr.Ariths) == 1 {
-		return Arith_Terms_BOOL(cmp_expr.Ariths[0].Arith.Terms, symbol_env)
+func Eval_Cmp_Bool(cmp_expr parser.Cmp_expr, symbol_env *parser.Symbol_Env) bool {
+	if cmp_expr.Left == nil {
+		return Arith_Terms_BOOL(cmp_expr.Left.Terms, symbol_env)
 	}
 
-	switch cmp_expr.Ariths[0].Arith.Type {
+	switch cmp_expr.Left.Type {
 	case basic_type.INT:
 		{
-			cmp1 := Arith_Terms_INT(cmp_expr.Ariths[0].Arith.Terms, symbol_env)
+			cmp1 := Arith_Terms_INT(cmp_expr.Left.Terms, symbol_env)
 
-			if cmp_expr.Ariths[1].Arith.Type != basic_type.INT {
+			if cmp_expr.Right.Type != basic_type.INT {
 				os.Exit(1)
 			} else {
-				cmp2 := Arith_Terms_INT(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
+				cmp2 := Arith_Terms_INT(cmp_expr.Right.Terms, symbol_env)
 
 				if cmp1 == cmp2 {
 					return true
@@ -32,12 +32,12 @@ func Eval_Cmp(cmp_expr parser.Cmp_expr, symbol_env *parser.Symbol_Env) bool {
 		}
 	case basic_type.DOUBLE:
 		{
-			cmp1 := Arith_Terms_DOUBLE(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
+			cmp1 := Arith_Terms_DOUBLE(cmp_expr.Left.Terms, symbol_env)
 
-			if cmp_expr.Ariths[1].Arith.Type != basic_type.DOUBLE {
+			if cmp_expr.Right.Type != basic_type.DOUBLE {
 				os.Exit(1)
 			} else {
-				cmp2 := Arith_Terms_DOUBLE(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
+				cmp2 := Arith_Terms_DOUBLE(cmp_expr.Right.Terms, symbol_env)
 
 				if cmp1 == cmp2 {
 					return true
@@ -50,12 +50,12 @@ func Eval_Cmp(cmp_expr parser.Cmp_expr, symbol_env *parser.Symbol_Env) bool {
 		}
 	case basic_type.STRING:
 		{
-			cmp1 := Arith_Terms_STRING(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
+			cmp1 := Arith_Terms_STRING(cmp_expr.Left.Terms, symbol_env)
 
-			if cmp_expr.Ariths[1].Arith.Type != basic_type.STRING {
+			if cmp_expr.Right.Type != basic_type.STRING {
 				os.Exit(1)
 			} else {
-				cmp2 := Arith_Terms_STRING(cmp_expr.Ariths[1].Arith.Terms, symbol_env)
+				cmp2 := Arith_Terms_STRING(cmp_expr.Right.Terms, symbol_env)
 
 				if cmp1 == cmp2 {
 					return true
