@@ -2,9 +2,10 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/type"
-	"strconv"
 )
 
 type ArithOp int
@@ -12,10 +13,8 @@ type ArithOp int
 const (
 	EQUAL ArithOp = iota + 1
 	NOTEQUAL
-	MTHAN
-	METHAN
-	LTHAN
-	LETHAN
+	GT
+	LT
 	ANONE
 )
 
@@ -26,14 +25,10 @@ func (e ArithOp) String() string {
 		return "EQUAL"
 	case NOTEQUAL:
 		return "NOTEQUAL"
-	case MTHAN:
-		return "MTHAN"
-	case METHAN:
-		return "METHAN"
-	case LTHAN:
-		return "LTHAN"
-	case LETHAN:
-		return "LETHAN"
+	case GT:
+		return "GT"
+	case LT:
+		return "LT"
 	case ANONE:
 		return "ANONE"
 
@@ -126,35 +121,20 @@ type Factor struct {
 	Args   []lexer.Token
 }
 
+var tokenToArithOp = map[lexer.TokenType]ArithOp{lexer.EQUAL: EQUAL, lexer.NOTEQUAL: NOTEQUAL, lexer.GT: GT, lexer.LT: LT}
+
 func Parse_Cmp_expr(tokens *Parser_Input) Cmp_expr {
 
 	cmp_expr := Cmp_expr{}
 	arith := Parse_Arith_expr(tokens)
 	cmp_expr.Left = &arith
 
-	if !tokens.empty() && (tokens.peek().Type == lexer.EQUAL || tokens.peek().Type == lexer.NOTEQUAL) {
+	if !tokens.empty() && (tokens.peek().Type == lexer.EQUAL || tokens.peek().Type == lexer.NOTEQUAL || tokens.peek().Type == lexer.GT || tokens.peek().Type == lexer.LT) {
 		op := tokens.next()
-		var aop ArithOp
-		switch op.Type {
-		case lexer.EQUAL:
-			{
-				aop = EQUAL
-			}
-		case lexer.NOTEQUAL:
-			{
-				aop = NOTEQUAL
-			}
-		default:
-			{
-				aop = ANONE
-			}
-
-		}
-
+		aop := tokenToArithOp[op.Type]
 		arith := Parse_Arith_expr(tokens)
 		cmp_expr.Right = &arith
 		cmp_expr.Op = aop
-
 	}
 
 	if !tokens.empty() && tokens.peek().Type == lexer.NEWLINE {

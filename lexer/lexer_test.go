@@ -40,4 +40,8 @@ func TestLexer(t *testing.T) {
 
 	fmt.Printf("%+v\n", tokens)
 
+	tokens = GetTokens(regex, " 2 > 1 ")
+
+	fmt.Printf("%+v\n", tokens)
+
 }

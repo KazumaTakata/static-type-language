@@ -6,8 +6,20 @@ import (
 	"os"
 )
 
+func Eval_Cmp_Double(cmp_expr parser.Cmp_expr, symbol_env *parser.Symbol_Env) float64 {
+	return Arith_Terms_DOUBLE(cmp_expr.Left.Terms, symbol_env)
+}
+
+func Eval_Cmp_String(cmp_expr parser.Cmp_expr, symbol_env *parser.Symbol_Env) string {
+	return Arith_Terms_STRING(cmp_expr.Left.Terms, symbol_env)
+}
+
+func Eval_Cmp_Int(cmp_expr parser.Cmp_expr, symbol_env *parser.Symbol_Env) int {
+	return Arith_Terms_INT(cmp_expr.Left.Terms, symbol_env)
+}
+
 func Eval_Cmp_Bool(cmp_expr parser.Cmp_expr, symbol_env *parser.Symbol_Env) bool {
-	if cmp_expr.Left == nil {
+	if cmp_expr.Right == nil {
 		return Arith_Terms_BOOL(cmp_expr.Left.Terms, symbol_env)
 	}
 
@@ -21,12 +33,40 @@ func Eval_Cmp_Bool(cmp_expr parser.Cmp_expr, symbol_env *parser.Symbol_Env) bool
 			} else {
 				cmp2 := Arith_Terms_INT(cmp_expr.Right.Terms, symbol_env)
 
-				if cmp1 == cmp2 {
-					return true
-				} else {
-					return false
+				switch cmp_expr.Op {
+				case parser.EQUAL:
+					{
+						if cmp1 == cmp2 {
+							return true
+						} else {
+							return false
+						}
+					}
+				case parser.NOTEQUAL:
+					{
+						if cmp1 != cmp2 {
+							return true
+						} else {
+							return false
+						}
+					}
+				case parser.GT:
+					{
+						if cmp1 > cmp2 {
+							return true
+						} else {
+							return false
+						}
+					}
+				case parser.LT:
+					{
+						if cmp1 < cmp2 {
+							return true
+						} else {
+							return false
+						}
+					}
 				}
-
 			}
 
 		}

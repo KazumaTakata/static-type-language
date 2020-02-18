@@ -42,6 +42,8 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"IDENT", "[a-zA-Z_]\\w*"})
 	lexer_rules = append(lexer_rules, []string{"EQUAL", "=="})
 	lexer_rules = append(lexer_rules, []string{"NOTEQUAL", "!="})
+	lexer_rules = append(lexer_rules, []string{"GT", ">"})
+	lexer_rules = append(lexer_rules, []string{"LT", "<"})
 
 	lexer_rules = append(lexer_rules, []string{"ASSIGN", "="})
 	regex_parts := []string{}
@@ -83,6 +85,8 @@ const (
 	RETURN
 	AND
 	OR
+	GT
+	LT
 )
 
 func (e TokenType) String() string {
@@ -140,6 +144,10 @@ func (e TokenType) String() string {
 		return "OR"
 	case AND:
 		return "AND"
+	case GT:
+		return "GT"
+	case LT:
+		return "LT"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -173,6 +181,8 @@ var tokenmap map[string]TokenType = map[string]TokenType{
 	"OR":        OR,
 	"AND":       AND,
 	"BOOL":      BOOL,
+	"GT":        GT,
+	"LT":        LT,
 }
 
 type Token struct {

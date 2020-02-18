@@ -22,6 +22,19 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 			_ = Type_Check_Arith(stmt.Expr, symbol_env)
 
 		}
+
+	case parser.ASSIGN_STMT:
+		{
+			expr_type := Type_Check_Arith(stmt.Assign.Expr, symbol_env)
+			object := resolve_name(stmt.Assign.Id, symbol_env)
+
+			if object.Variable.Type != expr_type {
+				fmt.Printf("%+v value can not rebind to %+v variable\n", expr_type, object.Variable.Type)
+				os.Exit(1)
+			}
+
+		}
+
 	case parser.DECL_STMT:
 		{
 			var_type := stmt.Decl.Type

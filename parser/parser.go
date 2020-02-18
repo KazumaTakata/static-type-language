@@ -52,3 +52,7 @@ func (p *Parser_Input) assert_next(tokentype lexer.TokenType) lexer.Token {
 func (p *Parser_Input) peek() lexer.Token {
 	return p.Tokens[p.Pos]
 }
+
+func (p *Parser_Input) peek2() lexer.Token {
+	return p.Tokens[p.Pos+1]
+}

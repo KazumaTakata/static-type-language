@@ -100,6 +100,22 @@ func Type_Check_Cmp_Arith(term1_type basic_type.Type, term2_type basic_type.Type
 
 }
 
+func resolve_name_pointer(id string, symbol_env *parser.Symbol_Env) *parser.Object {
+	if object, ok := symbol_env.Table[id]; ok {
+		return &object
+	} else {
+		if symbol_env.Parent_Env != nil {
+			return resolve_name_pointer(id, symbol_env.Parent_Env)
+		}
+
+		fmt.Printf("\nnot defined variable %v\n", id)
+		os.Exit(1)
+
+	}
+
+	return nil
+}
+
 func resolve_name(id string, symbol_env *parser.Symbol_Env) parser.Object {
 	if object, ok := symbol_env.Table[id]; ok {
 		return object

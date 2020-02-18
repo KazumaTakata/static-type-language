@@ -90,3 +90,23 @@ func TestCall(t *testing.T) {
 	fmt.Printf("%+v\n", variable_map)
 
 }
+
+func TestAssign(t *testing.T) {
+
+	regex_string := lexer.Get_Regex_String()
+
+	regex := regex.NewRegexWithParser(regex_string)
+
+	string_input := " var a int = 2 \n a = 3.0 \n"
+
+	tokens := lexer.GetTokens(regex, string_input)
+	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
+	stmts := parser.Parse_Stmts(&parser_input)
+
+	variable_map := parser.Symbol_Env{Table: parser.Symbol_Table{}}
+
+	Type_Check_Stmts(stmts, &variable_map)
+
+	fmt.Printf("%+v\n", variable_map)
+
+}

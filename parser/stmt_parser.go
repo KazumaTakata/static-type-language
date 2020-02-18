@@ -16,6 +16,7 @@ const (
 	DEF_STMT
 	EXPR
 	RETURN_STMT
+	ASSIGN_STMT
 )
 
 func (e Stmt_Type) String() string {
@@ -33,6 +34,8 @@ func (e Stmt_Type) String() string {
 		return "DEF_STMT"
 	case RETURN_STMT:
 		return "RETURN_STMT"
+	case ASSIGN_STMT:
+		return "ASSIGN_STMT"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -64,6 +67,7 @@ type Stmt struct {
 	If     *If_stmt
 	Def    *Def_stmt
 	Return *Return_stmt
+	Assign *Assign_stmt
 }
 type Func_param struct {
 	Ident string
@@ -77,6 +81,11 @@ type Def_stmt struct {
 	Stmts        []Stmt
 	Return_type  basic_type.Type
 	Return_value *Object
+}
+
+type Assign_stmt struct {
+	Id   string
+	Expr *Arith_expr
 }
 
 type Decl_stmt struct {
@@ -130,8 +139,27 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				stmt.Type = DECL_STMT
 
 			}
-		case lexer.INT, lexer.DOUBLE, lexer.STRING, lexer.IDENT:
+		case lexer.IDENT:
 			{
+				if len(tokens.Tokens) > 1 && tokens.peek2().Type == lexer.ASSIGN {
+					ident := tokens.assert_next(lexer.IDENT)
+					tokens.eat(lexer.ASSIGN)
+					expr := Parse_Arith_expr(tokens)
+					assign_stmt := Assign_stmt{Id: ident.Value, Expr: &expr}
+					stmt.Assign = &assign_stmt
+					stmt.Type = ASSIGN_STMT
+
+				} else {
+
+					expr := Parse_Arith_expr(tokens)
+					stmt.Expr = &expr
+					stmt.Type = EXPR
+
+				}
+			}
+		case lexer.INT, lexer.DOUBLE, lexer.STRING:
+			{
+
 				expr := Parse_Arith_expr(tokens)
 				stmt.Expr = &expr
 				stmt.Type = EXPR

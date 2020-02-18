@@ -51,6 +51,15 @@ func Calc_Arith(expr *parser.Arith_expr, symbol_env *parser.Symbol_Env) parser.O
 	return parser.Object{}
 }
 
+func assign_Table(id string, symbol_env *parser.Symbol_Env, object parser.Object) {
+	if _, ok := symbol_env.Table[id]; ok {
+		symbol_env.Table[id] = object
+	} else {
+		assign_Table(id, symbol_env.Parent_Env, object)
+	}
+
+}
+
 func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 
 	switch stmt.Type {
@@ -80,6 +89,14 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 			if Eval_Cmp_Bool(stmt.If.Cmp_expr, symbol_env) {
 				Eval_Stmts(stmt.If.Stmts, stmt.If.Symbol_Env)
 			}
+		}
+
+	case parser.ASSIGN_STMT:
+		{
+
+			result := Calc_Arith(stmt.Assign.Expr, symbol_env)
+			assign_Table(stmt.Assign.Id, symbol_env, result)
+
 		}
 
 	case parser.DECL_STMT:
