@@ -29,18 +29,18 @@ func argToObject(arg lexer.Token) parser.Object {
 	case lexer.INT:
 		{
 			int_value, _ := strconv.Atoi(arg.Value)
-			return parser.Object{Type: parser.VariableObj, Variable: &parser.Variable{Type: basic_type.INT, Int: int_value}}
+			return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Type: basic_type.INT, Int: int_value}}
 		}
 
 	case lexer.DOUBLE:
 		{
 			double_value, _ := strconv.ParseFloat(arg.Value, 64)
-			return parser.Object{Type: parser.VariableObj, Variable: &parser.Variable{Type: basic_type.DOUBLE, Double: double_value}}
+			return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Type: basic_type.DOUBLE, Double: double_value}}
 		}
 
 	case lexer.STRING:
 		{
-			return parser.Object{Type: parser.VariableObj, Variable: &parser.Variable{Type: basic_type.STRING, String: arg.Value}}
+			return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Type: basic_type.STRING, String: arg.Value}}
 		}
 
 	}
@@ -49,7 +49,7 @@ func argToObject(arg lexer.Token) parser.Object {
 }
 
 func handle_func_call(object parser.Object, factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.Object {
-	if object.Type != parser.FunctionObj {
+	if object.Type != parser.FunctionType {
 		fmt.Printf("\nvariable %s is not function\n", factor.Id)
 		os.Exit(1)
 	}
@@ -59,7 +59,7 @@ func handle_func_call(object parser.Object, factor parser.Factor, symbol_env *pa
 		if factor.Args[i].Type == lexer.IDENT {
 			param_object := resolve_variable(factor.Args[i].Value, symbol_env)
 			switch param_object.Type {
-			case parser.VariableObj:
+			case parser.PrimitiveType:
 				{
 					env.Table[arg.Ident] = param_object
 				}
@@ -136,15 +136,15 @@ func Arith_Factors_INT(factors []parser.TermElement, symbol_env *parser.Symbol_E
 	return result
 }
 
-func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.Variable {
+func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.PrimitiveObj {
 	object := resolve_variable(factor.Id, symbol_env)
 
 	if factor.IsCall {
 		returned_value := handle_func_call(object, factor, symbol_env)
-		return returned_value.Variable
+		return returned_value.Primitive
 
 	} else {
-		return object.Variable
+		return object.Primitive
 	}
 
 }

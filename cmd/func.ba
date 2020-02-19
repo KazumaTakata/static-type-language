@@ -1,0 +1,12 @@
+
+
+def add(z int) double {
+   var k double =  3.3  + 3
+   return z * k 
+}
+
+var y double = add(30) 
+
+y
+
+

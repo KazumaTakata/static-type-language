@@ -2,23 +2,6 @@
 
 var x int = 1
 
-var y []int = []int{}
-
-for x < 10 {
-   x = x + 1 
-}
-
-
-
-def add(z int, a int) double {
-   var k double =  3.3  + 3
-   return a * k 
-}
-
-var y double = add(30, 20) 
-
-y
-
-
+x
 
 
