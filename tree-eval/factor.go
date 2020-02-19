@@ -139,14 +139,25 @@ func Arith_Factors_INT(factors []parser.TermElement, symbol_env *parser.Symbol_E
 func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.PrimitiveObj {
 	object := resolve_variable(factor.Id, symbol_env)
 
-	if factor.IsCall {
-		returned_value := handle_func_call(object, factor, symbol_env)
-		return returned_value.Primitive
+	switch factor.FactorType {
+	case parser.FuncCall:
+		{
+			returned_value := handle_func_call(object, factor, symbol_env)
+			return returned_value.Primitive
 
-	} else {
-		return object.Primitive
+		}
+	case parser.ArrayMapAccess:
+		{
+			index := Arith_Terms_INT(factor.AccessIndex.Terms, symbol_env)
+			obj := object.Array.Value[index]
+			return obj
+		}
+	default:
+		{
+			return object.Primitive
+		}
+
 	}
-
 }
 func Arith_Factors_STRING(factors []parser.TermElement, symbol_env *parser.Symbol_Env) string {
 

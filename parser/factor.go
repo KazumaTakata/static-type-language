@@ -1,20 +1,43 @@
 package parser
 
 import (
-	"strconv"
-
+	"fmt"
 	"github.com/KazumaTakata/static-typed-language/lexer"
+	"strconv"
 )
 
+type FactorType int
+
+const (
+	FuncCall FactorType = iota + 1
+	ArrayMapAccess
+	Primitive
+)
+
+func (e FactorType) String() string {
+
+	switch e {
+	case FuncCall:
+		return "FuncCall"
+	case ArrayMapAccess:
+		return "ArrayMapAccess"
+	case Primitive:
+		return "Primitive"
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
 type Factor struct {
-	Int    int
-	Float  float64
-	String string
-	Id     string
-	Bool   bool
-	Type   lexer.TokenType
-	IsCall bool
-	Args   []lexer.Token
+	Int         int
+	Float       float64
+	String      string
+	Id          string
+	Bool        bool
+	Type        lexer.TokenType
+	FactorType  FactorType
+	Args        []lexer.Token
+	AccessIndex *Arith_expr
 }
 
 func parse_Factor(tokens *Parser_Input) Factor {
@@ -53,11 +76,19 @@ func parse_Factor(tokens *Parser_Input) Factor {
 				}
 				tokens.eat(lexer.RPAREN)
 
-				return Factor{Id: ident_token.Value, Type: lexer.IDENT, IsCall: true, Args: args}
+				return Factor{Id: ident_token.Value, Type: lexer.IDENT, FactorType: FuncCall, Args: args}
+
+			} else if !tokens.empty() && tokens.peek().Type == lexer.LSQUARE {
+				tokens.eat(lexer.LSQUARE)
+
+				index := Parse_Arith_expr(tokens)
+				tokens.eat(lexer.RSQUARE)
+
+				return Factor{AccessIndex: &index, Id: ident_token.Value, Type: lexer.IDENT, FactorType: ArrayMapAccess}
 
 			} else {
 
-				return Factor{Id: ident_token.Value, Type: lexer.IDENT}
+				return Factor{Id: ident_token.Value, Type: lexer.IDENT, FactorType: Primitive}
 			}
 		}
 	case lexer.BOOL:
@@ -70,7 +101,7 @@ func parse_Factor(tokens *Parser_Input) Factor {
 				bool_value = false
 			}
 
-			return Factor{Bool: bool_value, Type: lexer.IDENT}
+			return Factor{Bool: bool_value, Type: lexer.BOOL}
 		}
 	}
 

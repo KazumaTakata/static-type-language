@@ -138,44 +138,66 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 
 		object := resolve_name(factor.Id, symbol_env)
 
-		if factor.IsCall {
-			if object.Type != parser.FunctionType {
-				fmt.Printf("\nvariable %s is not function\n", factor.Id)
-				os.Exit(1)
-			}
-			params := factor.Args
-			function := object.Function
+		switch factor.FactorType {
 
-			for i, arg := range function.Args {
-				param := params[i]
-				if param.Type == lexer.IDENT {
-					param_object := resolve_name(param.Value, symbol_env)
-					switch param_object.Type {
-					case parser.PrimitiveType:
-						{
-							if param_object.Primitive.Type != arg.Type {
-								fmt.Printf("\nparam type mismatch:variable of type %v can not be passed as param of type %v\n", param_object.Primitive.Type, arg.Type)
-								os.Exit(1)
+		case parser.FuncCall:
+			{
+				if object.Type != parser.FunctionType {
+					fmt.Printf("\nvariable %s is not function\n", factor.Id)
+					os.Exit(1)
+				}
+				params := factor.Args
+				function := object.Function
+
+				for i, arg := range function.Args {
+					param := params[i]
+					if param.Type == lexer.IDENT {
+						param_object := resolve_name(param.Value, symbol_env)
+						switch param_object.Type {
+						case parser.PrimitiveType:
+							{
+								if param_object.Primitive.Type != arg.Type {
+									fmt.Printf("\nparam type mismatch:variable of type %v can not be passed as param of type %v\n", param_object.Primitive.Type, arg.Type)
+									os.Exit(1)
+								}
+
 							}
+						}
 
+					} else {
+						if arg.Type != basic_type.LexerTypeToType[params[i].Type] {
+							fmt.Printf("\nparam type mismatch: %v can not be passed as type %v\n", param.Type, arg.Type)
+							os.Exit(1)
 						}
 					}
 
-				} else {
-					if arg.Type != basic_type.LexerTypeToType[params[i].Type] {
-						fmt.Printf("\nparam type mismatch: %v can not be passed as type %v\n", param.Type, arg.Type)
-						os.Exit(1)
-					}
+				}
+				return function.Return_type
+			}
+		case parser.ArrayMapAccess:
+			{
+
+				if object.Type != parser.ArrayType {
+					fmt.Printf("\nvariable %s is not function\n", factor.Id)
+					os.Exit(1)
 				}
 
+				index_type := Type_Check_Arith(factor.AccessIndex, symbol_env)
+				if index_type != basic_type.INT {
+					fmt.Printf("\narray index type should be int type: got %+v\n", index_type)
+					os.Exit(1)
+				}
+				return object.Array.Type
 			}
-			return function.Return_type
-		} else {
-			return object.Primitive.Type
+		default:
+			{
+				return object.Primitive.Type
+			}
 		}
 	}
 
 	return basic_type.LexerTypeToType[factor.Type]
+
 }
 
 func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, symbol_env *parser.Symbol_Env) basic_type.Type {

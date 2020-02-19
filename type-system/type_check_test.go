@@ -151,7 +151,7 @@ func TestArray2(t *testing.T) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	string_input := " var a []int = []int{3, 3}"
+	string_input := " var a []int = []int{3, 3}\n a[0]"
 
 	tokens := lexer.GetTokens(regex, string_input)
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
