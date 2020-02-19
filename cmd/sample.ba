@@ -2,6 +2,8 @@
 
 var x int = 1
 
+var y []int = []int{}
+
 for x < 10 {
    x = x + 1 
 }

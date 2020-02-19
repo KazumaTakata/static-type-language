@@ -10,29 +10,39 @@ type Symbol_Table map[string]Object
 type ObjectType int
 
 const (
-	VariableObj ObjectType = iota + 1
-	FunctionObj
+	PrimitiveType ObjectType = iota + 1
+	FunctionType
+	ArrayType
 )
 
 func (e ObjectType) String() string {
 
 	switch e {
-	case VariableObj:
-		return "Variable"
-	case FunctionObj:
+	case PrimitiveType:
+		return "Primitive"
+	case FunctionType:
 		return "Function"
+	case ArrayType:
+		return "Array"
+
 	default:
 		return fmt.Sprintf("%d", int(e))
 	}
 }
 
 type Object struct {
-	Type     ObjectType
-	Variable *Variable
-	Function *Def_stmt
+	Type      ObjectType
+	Primitive *PrimitiveObj
+	Function  *Def_stmt
+	Array     *ArrayObj
 }
 
-type Variable struct {
+type ArrayObj struct {
+	Type  basic_type.Type
+	Value []*PrimitiveObj
+}
+
+type PrimitiveObj struct {
 	Type   basic_type.Type
 	Int    int
 	Double float64

@@ -111,3 +111,24 @@ func TestAssignParser(t *testing.T) {
 
 	fmt.Printf("%+v", stmt.Assign)
 }
+
+func TestInitParser(t *testing.T) {
+
+	fmt.Printf("\n------------------------------------------------------\n")
+
+	regex_string := lexer.Get_Regex_String()
+
+	regex := regex.NewRegexWithParser(regex_string)
+
+	input := "a =[]int{3, 3}  \n\n"
+
+	tokens := lexer.GetTokens(regex, input)
+
+	parser_input := Parser_Input{Tokens: tokens, Pos: 0}
+
+	fmt.Printf("%+v\n\n", tokens)
+
+	stmt := Parse_Stmt(&parser_input)
+
+	fmt.Printf("%+v", stmt.Assign.Assign.Init)
+}

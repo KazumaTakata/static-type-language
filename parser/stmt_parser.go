@@ -42,6 +42,50 @@ func (e Stmt_Type) String() string {
 	}
 }
 
+type InitType int
+
+const (
+	ARRAY_INIT InitType = iota + 1
+	MAP_INIT
+)
+
+func (e InitType) String() string {
+
+	switch e {
+	case ARRAY_INIT:
+		return "ARRAY_INIT"
+	case MAP_INIT:
+		return "MAP_INIT"
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
+type AssignType int
+
+const (
+	EXPR_ASSIGN AssignType = iota + 1
+	INIT_ASSIGN
+)
+
+func (e AssignType) String() string {
+
+	switch e {
+	case EXPR_ASSIGN:
+		return "EXPR_ASSIGN"
+	case INIT_ASSIGN:
+		return "INIT_ASSIGN"
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
+type Assign struct {
+	Type AssignType
+	Expr *Cmp_expr
+	Init *Init
+}
+
 type For_stmt struct {
 	Symbol_Env *Symbol_Env
 	Cmp_expr   Cmp_expr
@@ -84,14 +128,26 @@ type Def_stmt struct {
 }
 
 type Assign_stmt struct {
-	Id   string
-	Expr *Arith_expr
+	Id     string
+	Assign *Assign
 }
 
 type Decl_stmt struct {
-	Id   string
-	Type basic_type.Type
-	Expr *Arith_expr
+	Id     string
+	Type   basic_type.Variable_Type
+	Assign *Assign
+}
+type Array struct {
+	Type      basic_type.Type
+	InitValue []*Cmp_expr
+}
+
+type Map struct{}
+
+type Init struct {
+	Type  InitType
+	Array *Array
+	Map   *Map
 }
 
 var getBasicType = map[string]basic_type.Type{"int": basic_type.INT, "double": basic_type.DOUBLE, "string": basic_type.STRING}
@@ -120,6 +176,76 @@ func Parse_Stmts(tokens *Parser_Input) []Stmt {
 	return stmts
 }
 
+func parse_Type(tokens *Parser_Input) basic_type.Variable_Type {
+
+	if tokens.peek().Type == lexer.LSQUARE {
+		tokens.eat(lexer.LSQUARE)
+		tokens.eat(lexer.RSQUARE)
+		ident_type := tokens.assert_next(lexer.DECL_TYPE)
+
+		return basic_type.Variable_Type{Type: getBasicType[ident_type.Value], DataStructType: basic_type.ARRAY}
+
+	} else {
+		ident_type := tokens.assert_next(lexer.DECL_TYPE)
+		return basic_type.Variable_Type{Type: getBasicType[ident_type.Value], DataStructType: basic_type.PRIMITIVE}
+	}
+
+}
+
+func parse_Init(tokens *Parser_Input) Init {
+	switch tokens.peek().Type {
+	case lexer.LSQUARE:
+		{
+			tokens.eat(lexer.LSQUARE)
+			tokens.eat(lexer.RSQUARE)
+			ident_type := tokens.assert_next(lexer.DECL_TYPE)
+			tokens.eat(lexer.LCURL)
+			cmp_expr := Parse_Cmp_expr(tokens)
+			cmp_exprs := []*Cmp_expr{&cmp_expr}
+
+			for tokens.peek().Type == lexer.COMMA {
+				tokens.eat(lexer.COMMA)
+				cmp_expr := Parse_Cmp_expr(tokens)
+				cmp_exprs = append(cmp_exprs, &cmp_expr)
+			}
+
+			tokens.eat(lexer.RCURL)
+
+			array := Array{Type: getBasicType[ident_type.Value], InitValue: cmp_exprs}
+
+			init := Init{Type: ARRAY_INIT, Array: &array}
+
+			return init
+
+		}
+	case lexer.MAP:
+		{
+		}
+	case lexer.NEW:
+		{
+		}
+
+	}
+
+	return Init{}
+
+}
+
+func parse_Assign(tokens *Parser_Input) Assign {
+
+	assign := Assign{}
+	if tokens.peek().Type == lexer.LSQUARE || tokens.peek().Type == lexer.NEW || tokens.peek().Type == lexer.MAP {
+		init := parse_Init(tokens)
+		assign.Init = &init
+		assign.Type = INIT_ASSIGN
+	} else {
+		expr := Parse_Cmp_expr(tokens)
+		assign.Expr = &expr
+		assign.Type = EXPR_ASSIGN
+	}
+	return assign
+}
+
 func Parse_Stmt(tokens *Parser_Input) Stmt {
 
 	stmt := Stmt{}
@@ -131,10 +257,10 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 			{
 				tokens.eat(lexer.VAR)
 				ident := tokens.assert_next(lexer.IDENT)
-				ident_type := tokens.assert_next(lexer.DECL_TYPE)
+				variable_type := parse_Type(tokens)
 				tokens.eat(lexer.ASSIGN)
-				expr := Parse_Arith_expr(tokens)
-				decl_stmt := Decl_stmt{Id: ident.Value, Type: getBasicType[ident_type.Value], Expr: &expr}
+				assign := parse_Assign(tokens)
+				decl_stmt := Decl_stmt{Id: ident.Value, Type: variable_type, Assign: &assign}
 				stmt.Decl = &decl_stmt
 				stmt.Type = DECL_STMT
 
@@ -144,8 +270,8 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				if len(tokens.Tokens) > 1 && tokens.peek2().Type == lexer.ASSIGN {
 					ident := tokens.assert_next(lexer.IDENT)
 					tokens.eat(lexer.ASSIGN)
-					expr := Parse_Arith_expr(tokens)
-					assign_stmt := Assign_stmt{Id: ident.Value, Expr: &expr}
+					assign := parse_Assign(tokens)
+					assign_stmt := Assign_stmt{Id: ident.Value, Assign: &assign}
 					stmt.Assign = &assign_stmt
 					stmt.Type = ASSIGN_STMT
 

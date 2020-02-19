@@ -11,6 +11,8 @@ import (
 
 func TestLexer(t *testing.T) {
 
+	fmt.Printf("\n\n-----------------------------------------------\n\n")
+
 	regex_string := lexer.Get_Regex_String()
 
 	regex := regex.NewRegexWithParser(regex_string)
@@ -30,6 +32,8 @@ func TestLexer(t *testing.T) {
 }
 
 func TestFor(t *testing.T) {
+
+	fmt.Printf("\n\n-----------------------------------------------\n\n")
 
 	regex_string := lexer.Get_Regex_String()
 
@@ -53,6 +57,8 @@ func TestFor(t *testing.T) {
 
 func TestDef(t *testing.T) {
 
+	fmt.Printf("\n\n-----------------------------------------------\n\n")
+
 	regex_string := lexer.Get_Regex_String()
 
 	regex := regex.NewRegexWithParser(regex_string)
@@ -72,6 +78,8 @@ func TestDef(t *testing.T) {
 }
 
 func TestCall(t *testing.T) {
+
+	fmt.Printf("\n\n-----------------------------------------------\n\n")
 
 	regex_string := lexer.Get_Regex_String()
 
@@ -93,11 +101,13 @@ func TestCall(t *testing.T) {
 
 func TestAssign(t *testing.T) {
 
+	fmt.Printf("\n\n-----------------------------------------------\n\n")
+
 	regex_string := lexer.Get_Regex_String()
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	string_input := " var a int = 2 \n a = 3.0 \n"
+	string_input := " var a int = 2 \n a = 3 \n"
 
 	tokens := lexer.GetTokens(regex, string_input)
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
@@ -108,5 +118,49 @@ func TestAssign(t *testing.T) {
 	Type_Check_Stmts(stmts, &variable_map)
 
 	fmt.Printf("%+v\n", variable_map)
+
+}
+
+func TestArray(t *testing.T) {
+
+	fmt.Printf("\n\n-----------------------------------------------\n\n")
+
+	regex_string := lexer.Get_Regex_String()
+
+	regex := regex.NewRegexWithParser(regex_string)
+
+	string_input := " var a []int = []int{3}"
+
+	tokens := lexer.GetTokens(regex, string_input)
+	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
+	stmts := parser.Parse_Stmts(&parser_input)
+
+	variable_map := parser.Symbol_Env{Table: parser.Symbol_Table{}}
+
+	Type_Check_Stmts(stmts, &variable_map)
+
+	fmt.Printf("%+v\n", variable_map.Table["a"].Array)
+
+}
+
+func TestArray2(t *testing.T) {
+
+	fmt.Printf("\n\n-----------------------------------------------\n\n")
+
+	regex_string := lexer.Get_Regex_String()
+
+	regex := regex.NewRegexWithParser(regex_string)
+
+	string_input := " var a []int = []int{3, 3}"
+
+	tokens := lexer.GetTokens(regex, string_input)
+	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
+	stmts := parser.Parse_Stmts(&parser_input)
+
+	variable_map := parser.Symbol_Env{Table: parser.Symbol_Table{}}
+
+	Type_Check_Stmts(stmts, &variable_map)
+
+	fmt.Printf("%+v\n", variable_map.Table["a"].Array)
 
 }

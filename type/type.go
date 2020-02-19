@@ -32,3 +32,16 @@ func (e Type) String() string {
 		return fmt.Sprintf("NULL")
 	}
 }
+
+type DataStructType int
+
+const (
+	MAP DataStructType = iota + 1
+	ARRAY
+	PRIMITIVE
+)
+
+type Variable_Type struct {
+	Type           Type
+	DataStructType DataStructType
+}

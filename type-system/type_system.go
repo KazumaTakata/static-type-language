@@ -139,7 +139,7 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 		object := resolve_name(factor.Id, symbol_env)
 
 		if factor.IsCall {
-			if object.Type != parser.FunctionObj {
+			if object.Type != parser.FunctionType {
 				fmt.Printf("\nvariable %s is not function\n", factor.Id)
 				os.Exit(1)
 			}
@@ -151,10 +151,10 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 				if param.Type == lexer.IDENT {
 					param_object := resolve_name(param.Value, symbol_env)
 					switch param_object.Type {
-					case parser.VariableObj:
+					case parser.PrimitiveType:
 						{
-							if param_object.Variable.Type != arg.Type {
-								fmt.Printf("\nparam type mismatch:variable of type %v can not be passed as param of type %v\n", param_object.Variable.Type, arg.Type)
+							if param_object.Primitive.Type != arg.Type {
+								fmt.Printf("\nparam type mismatch:variable of type %v can not be passed as param of type %v\n", param_object.Primitive.Type, arg.Type)
 								os.Exit(1)
 							}
 
@@ -171,7 +171,7 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 			}
 			return function.Return_type
 		} else {
-			return object.Variable.Type
+			return object.Primitive.Type
 		}
 	}
 

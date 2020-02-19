@@ -44,4 +44,12 @@ func TestLexer(t *testing.T) {
 
 	fmt.Printf("%+v\n", tokens)
 
+	tokens = GetTokens(regex, "new Init{}")
+
+	fmt.Printf("%+v\n", tokens)
+
+	tokens = GetTokens(regex, "map[int]int")
+
+	fmt.Printf("%+v\n", tokens)
+
 }

@@ -26,6 +26,9 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"RPAREN", "\\)"})
 	lexer_rules = append(lexer_rules, []string{"LCURL", "\\{"})
 	lexer_rules = append(lexer_rules, []string{"RCURL", "\\}"})
+	lexer_rules = append(lexer_rules, []string{"LSQUARE", "\\["})
+	lexer_rules = append(lexer_rules, []string{"RSQUARE", "\\]"})
+
 	lexer_rules = append(lexer_rules, []string{"COMMA", ","})
 
 	//keyword
@@ -35,6 +38,8 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"FOR", "for"})
 	lexer_rules = append(lexer_rules, []string{"RETURN", "return"})
 	lexer_rules = append(lexer_rules, []string{"BOOL", "true|false"})
+	lexer_rules = append(lexer_rules, []string{"MAP", "map"})
+	lexer_rules = append(lexer_rules, []string{"NEW", "new"})
 
 	//type
 	lexer_rules = append(lexer_rules, []string{"DECL_TYPE", "int|double|string|bool"})
@@ -87,6 +92,10 @@ const (
 	OR
 	GT
 	LT
+	LSQUARE
+	RSQUARE
+	MAP
+	NEW
 )
 
 func (e TokenType) String() string {
@@ -148,6 +157,14 @@ func (e TokenType) String() string {
 		return "GT"
 	case LT:
 		return "LT"
+	case LSQUARE:
+		return "LSQUARE"
+	case RSQUARE:
+		return "RSQUARE"
+	case MAP:
+		return "MAP"
+	case NEW:
+		return "NEW"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -183,6 +200,10 @@ var tokenmap map[string]TokenType = map[string]TokenType{
 	"BOOL":      BOOL,
 	"GT":        GT,
 	"LT":        LT,
+	"LSQUARE":   LSQUARE,
+	"RSQUARE":   RSQUARE,
+	"MAP":       MAP,
+	"NEW":       NEW,
 }
 
 type Token struct {
