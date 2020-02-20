@@ -56,14 +56,14 @@ func (e DataStructType) String() string {
 }
 
 type Variable_Type struct {
-	Type      DataStructType
-	Array     *ArrayType
-	Map       *MapType
-	Primitive *PrimitiveType
+	DataStructType DataStructType
+	Array          *ArrayType
+	Map            *MapType
+	Primitive      *PrimitiveType
 }
 
 type ArrayType struct {
-	Type Variable_Type
+	ElementType Variable_Type
 }
 
 type MapType struct {

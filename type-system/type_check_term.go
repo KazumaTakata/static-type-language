@@ -23,21 +23,42 @@ func Type_Check_Arith_Terms(terms []parser.ArithElement, symbol_env *parser.Symb
 	var operand1_type basic_type.Type
 	var operand2_type basic_type.Type
 
+	var operand1_variable_type basic_type.Variable_Type
+	var operand2_variable_type basic_type.Variable_Type
+
 	for i, term := range terms {
 		if i == 0 {
-			operand1_type = Type_Check_Arith_Factors(term.Term.Factors, symbol_env)
-			terms[i].Term.Type = operand1_type
+			operand1_variable_type = Type_Check_Arith_Factors(term.Term.Factors, symbol_env)
+
+			if operand1_variable_type.DataStructType != basic_type.PRIMITIVE {
+				fmt.Printf("\ntype %+v cannot be added or subed\n", operand1_variable_type.DataStructType)
+				os.Exit(1)
+			}
+
+			terms[i].Term.Type = operand1_variable_type
 			continue
 		}
 
 		operand2_type = operand1_type
-		operand1_type = Type_Check_Arith_Factors(term.Term.Factors, symbol_env)
-		terms[i].Term.Type = operand1_type
+		operand2_variable_type = operand1_variable_type
+		operand2_type = operand2_variable_type.Primitive.Type
+
+		operand1_variable_type = Type_Check_Arith_Factors(term.Term.Factors, symbol_env)
+
+		if operand1_variable_type.DataStructType != basic_type.PRIMITIVE {
+
+			fmt.Printf("\ntype %+v cannot be added or subed\n", operand1_variable_type.DataStructType)
+			os.Exit(1)
+
+		}
+
+		operand1_type = operand1_variable_type.Primitive.Type
+		terms[i].Term.Type = operand1_variable_type
 
 		operand1_type = Type_Check_Arith_Term(operand2_type, operand1_type, term.Op)
 	}
 
-	return operand1_type
+	return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: operand1_type}}
 
 }
 func Type_Check_Arith_Term(term1_type basic_type.Type, term2_type basic_type.Type, op parser.TermOp) basic_type.Type {

@@ -44,11 +44,10 @@ func Arith_Terms_DOUBLE(terms []parser.ArithElement, symbol_env *parser.Symbol_E
 	var result float64
 
 	for i, term := range terms {
-		//		fmt.Printf("%+v\n", term)
 		if i == 0 {
-			if term.Term.Type == basic_type.INT {
+			if term.Term.Type.Primitive.Type == basic_type.INT {
 				result = float64(Arith_Factors_INT(term.Term.Factors, symbol_env))
-			} else if term.Term.Type == basic_type.DOUBLE {
+			} else if term.Term.Type.Primitive.Type == basic_type.DOUBLE {
 				result = Arith_Factors_DOUBLE(term.Term.Factors, symbol_env)
 			}
 			continue
@@ -56,18 +55,18 @@ func Arith_Terms_DOUBLE(terms []parser.ArithElement, symbol_env *parser.Symbol_E
 		switch term.Op {
 		case parser.ADD:
 			{
-				if term.Term.Type == basic_type.INT {
+				if term.Term.Type.Primitive.Type == basic_type.INT {
 					result = result + float64(Arith_Factors_INT(term.Term.Factors, symbol_env))
-				} else if term.Term.Type == basic_type.DOUBLE {
+				} else if term.Term.Type.Primitive.Type == basic_type.DOUBLE {
 					result = result + Arith_Factors_DOUBLE(term.Term.Factors, symbol_env)
 				}
 			}
 
 		case parser.SUB:
 			{
-				if term.Term.Type == basic_type.INT {
+				if term.Term.Type.Primitive.Type == basic_type.INT {
 					result = result - float64(Arith_Factors_INT(term.Term.Factors, symbol_env))
-				} else if term.Term.Type == basic_type.DOUBLE {
+				} else if term.Term.Type.Primitive.Type == basic_type.DOUBLE {
 					result = result - Arith_Factors_DOUBLE(term.Term.Factors, symbol_env)
 				}
 			}

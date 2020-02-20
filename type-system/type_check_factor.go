@@ -64,8 +64,8 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 						switch param_object.Type {
 						case parser.PrimitiveType:
 							{
-								if basic_type.PRIMITIVE != arg.Type.Type {
-									fmt.Printf("\nparam type mismatch:argument type  %+v is not primitive\n", arg.Type.Type)
+								if basic_type.PRIMITIVE != arg.Type.DataStructType {
+									fmt.Printf("\nparam type mismatch:argument type  %+v is not primitive\n", arg.Type.DataStructType)
 									os.Exit(1)
 								}
 
@@ -84,7 +84,7 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 						}
 
 					} else {
-						if arg.Type.Type != basic_type.PRIMITIVE {
+						if arg.Type.DataStructType != basic_type.PRIMITIVE {
 							fmt.Printf("\nparam type mismatch: %v is not primitive type \n", arg.Type)
 							os.Exit(1)
 						}
@@ -101,14 +101,14 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 		case parser.ArrayMapAccess:
 			{
 
-				if object.Type != parser.ArrayType {
-					fmt.Printf("\nvariable %s is not function\n", factor.Id)
-					os.Exit(1)
-				}
+				/* if object.Type != parser.ArrayType {*/
+				//fmt.Printf("\nvariable %s is not function\n", factor.Id)
+				//os.Exit(1)
+				//}
 
 				index_type := Type_Check_Arith(factor.AccessIndex, symbol_env)
-				if index_type.Type != basic_type.PRIMITIVE {
-					fmt.Printf("\nparam type mismatch: %v is not primitive type \n", index_type.Type)
+				if index_type.DataStructType != basic_type.PRIMITIVE {
+					fmt.Printf("\nparam type mismatch: %v is not primitive type \n", index_type.DataStructType)
 					os.Exit(1)
 				}
 
@@ -116,18 +116,21 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 					fmt.Printf("\narray index type should be int type: got %+v\n", index_type)
 					os.Exit(1)
 				}
-				return basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: object.Array.Type}}
+
+				if object.Type == parser.ArrayType {
+					return object.Array.ElementType
+				}
 			}
 		default:
 			{
 				switch object.Type {
 				case parser.ArrayType:
 					{
-						return basic_type.Variable_Type{Type: basic_type.ARRAY, Array: &basic_type.ArrayType{Type: basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: object.Array.Type}}}}
+						return basic_type.Variable_Type{DataStructType: basic_type.ARRAY, Array: &basic_type.ArrayType{ElementType: object.Array.ElementType}}
 					}
 				case parser.PrimitiveType:
 					{
-						return basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: object.Primitive.Type}}
+						return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: object.Primitive.Type}}
 
 					}
 
@@ -137,7 +140,7 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 		}
 	}
 
-	return basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: basic_type.LexerTypeToType[factor.Type]}}
+	return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: basic_type.LexerTypeToType[factor.Type]}}
 }
 
 func Type_Check_Arith_Factors(factors []parser.TermElement, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
@@ -155,9 +158,9 @@ func Type_Check_Arith_Factors(factors []parser.TermElement, symbol_env *parser.S
 	for i, factor := range factors {
 		if i == 0 {
 			operand1_variable_type = get_Type_of_Factor(factor.Factor, symbol_env)
-			if operand1_variable_type.Type != basic_type.PRIMITIVE {
+			if operand1_variable_type.DataStructType != basic_type.PRIMITIVE {
 
-				fmt.Printf("\ntype %+v cannot be added or subed\n", operand1_variable_type.Type)
+				fmt.Printf("\ntype %+v cannot be added or subed\n", operand1_variable_type.DataStructType)
 				os.Exit(1)
 
 			}
@@ -168,21 +171,23 @@ func Type_Check_Arith_Factors(factors []parser.TermElement, symbol_env *parser.S
 
 		operand2_type = operand1_type
 		operand2_variable_type = operand1_variable_type
+		operand2_type = operand2_variable_type.Primitive.Type
 
 		operand1_variable_type = get_Type_of_Factor(factor.Factor, symbol_env)
-		operand1_type = operand1_variable_type.Primitive.Type
 
-		if operand1_variable_type.Type != basic_type.PRIMITIVE {
+		if operand1_variable_type.DataStructType != basic_type.PRIMITIVE {
 
-			fmt.Printf("\ntype %+v cannot be added or subed\n", operand1_variable_type.Type)
+			fmt.Printf("\ntype %+v cannot be added or subed\n", operand1_variable_type.DataStructType)
 			os.Exit(1)
 
 		}
 
+		operand1_type = operand1_variable_type.Primitive.Type
+
 		operand1_type = Type_Check_Arith_Factor(operand2_type, operand1_type, factor.Op)
 	}
 
-	return basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: operand1_type}}
+	return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: operand1_type}}
 
 }
 

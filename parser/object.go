@@ -38,8 +38,8 @@ type Object struct {
 }
 
 type ArrayObj struct {
-	Type  basic_type.Type
-	Value []*PrimitiveObj
+	ElementType basic_type.Variable_Type
+	Value       []*PrimitiveObj
 }
 
 type PrimitiveObj struct {

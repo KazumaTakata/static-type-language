@@ -15,7 +15,7 @@ func Type_Check_Cmp_Arith(term1_type basic_type.Type, term2_type basic_type.Type
 		return basic_type.BOOL
 	}
 
-	fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", term1_type, op, term2_type)
+	fmt.Printf("\ntype    mismatch: %v can not be %ved with %v\n", term1_type, op, term2_type)
 	os.Exit(1)
 
 	return basic_type.INT
@@ -28,11 +28,24 @@ func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, symbol_env *parser.Symbol_Env) ba
 
 	if cmp_expr.Right != nil {
 		right_type := Type_Check_Arith(cmp_expr.Right, symbol_env)
-		if left_type != right_type {
+
+		if left_type.DataStructType != basic_type.PRIMITIVE {
+			fmt.Printf("\ntype mismatch: type should be primitive %+v\n", left_type)
+			os.Exit(1)
+
+		}
+
+		if right_type.DataStructType != basic_type.PRIMITIVE {
+			fmt.Printf("\ntype mismatch: type should be primitive %+v\n", left_type)
+			os.Exit(1)
+
+		}
+
+		if left_type.Primitive.Type != right_type.Primitive.Type {
 			fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", left_type, cmp_expr.Op, right_type)
 			os.Exit(1)
 		} else {
-			cmp_expr.Type = basic_type.BOOL
+			cmp_expr.Type = basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: basic_type.BOOL}}
 			return cmp_expr.Type
 		}
 	}
