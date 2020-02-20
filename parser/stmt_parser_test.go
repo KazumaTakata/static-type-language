@@ -120,7 +120,7 @@ func TestInitParser(t *testing.T) {
 
 	regex := regex.NewRegexWithParser(regex_string)
 
-	input := "a =[]int{3, 3}  \n\n"
+	input := "var a []int =[]int{3, 3}  \n\n"
 
 	tokens := lexer.GetTokens(regex, input)
 
@@ -130,5 +130,5 @@ func TestInitParser(t *testing.T) {
 
 	stmt := Parse_Stmt(&parser_input)
 
-	fmt.Printf("%+v", stmt.Assign.Assign.Init)
+	fmt.Printf("%+v", stmt.Decl)
 }

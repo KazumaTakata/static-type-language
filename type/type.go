@@ -41,7 +41,36 @@ const (
 	PRIMITIVE
 )
 
+func (e DataStructType) String() string {
+
+	switch e {
+	case MAP:
+		return "MAP"
+	case ARRAY:
+		return "ARRAY"
+	case PRIMITIVE:
+		return "PRIMITIVE"
+	default:
+		return fmt.Sprintf("%d", e)
+	}
+}
+
 type Variable_Type struct {
-	Type           Type
-	DataStructType DataStructType
+	Type      DataStructType
+	Array     *ArrayType
+	Map       *MapType
+	Primitive *PrimitiveType
+}
+
+type ArrayType struct {
+	Type Variable_Type
+}
+
+type MapType struct {
+	KeyType   Variable_Type
+	ValueType Variable_Type
+}
+
+type PrimitiveType struct {
+	Type Type
 }

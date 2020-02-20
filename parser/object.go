@@ -54,5 +54,5 @@ type Symbol_Env struct {
 	Table        Symbol_Table
 	Parent_Env   *Symbol_Env
 	Return_Value *Object
-	Return_Type  basic_type.Type
+	Return_Type  basic_type.Variable_Type
 }

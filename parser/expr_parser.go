@@ -86,12 +86,12 @@ type Cmp_expr struct {
 	Left  *Arith_expr
 	Right *Arith_expr
 	Op    ArithOp
-	Type  basic_type.Type
+	Type  basic_type.Variable_Type
 }
 
 type Arith_expr struct {
 	Terms []ArithElement
-	Type  basic_type.Type
+	Type  basic_type.Variable_Type
 }
 
 type ArithElement struct {
@@ -101,7 +101,7 @@ type ArithElement struct {
 
 type Term struct {
 	Factors []TermElement
-	Type    basic_type.Type
+	Type    basic_type.Variable_Type
 }
 
 type TermElement struct {

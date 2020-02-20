@@ -24,14 +24,13 @@ func Type_Check_Assign(assign *parser.Assign, symbol_env *parser.Symbol_Env) bas
 				array_type := assign.Init.Array.Type
 				for _, init_value := range assign.Init.Array.InitValue {
 					cmp_type := Type_Check_Cmp(init_value, symbol_env)
-					if array_type != cmp_type {
+					if array_type.Type != cmp_type.Type {
 						fmt.Printf("array type %+v  mismatch to initialization type %+v\n", array_type, cmp_type)
 						os.Exit(1)
-
 					}
 				}
 
-				return basic_type.Variable_Type{Type: array_type, DataStructType: basic_type.ARRAY}
+				return array_type
 			}
 		case parser.MAP_INIT:
 			{
@@ -42,7 +41,7 @@ func Type_Check_Assign(assign *parser.Assign, symbol_env *parser.Symbol_Env) bas
 
 		cmp_type := Type_Check_Cmp(assign.Expr, symbol_env)
 
-		return basic_type.Variable_Type{Type: cmp_type, DataStructType: basic_type.PRIMITIVE}
+		return cmp_type
 	}
 
 	return basic_type.Variable_Type{}
@@ -62,7 +61,7 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 			variable_type := Type_Check_Assign(stmt.Assign.Assign, symbol_env)
 			object := resolve_name(stmt.Assign.Id, symbol_env)
 
-			switch variable_type.DataStructType {
+			switch variable_type.Type {
 			case basic_type.ARRAY:
 				{
 					if object.Type != parser.ArrayType {
@@ -70,7 +69,7 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 						os.Exit(1)
 					}
 
-					if object.Array.Type != variable_type.Type {
+					if object.Array.Type != variable_type.Array.Type.Primitive.Type {
 						fmt.Printf("array of type %+v can not assigned to type of %+v\n", variable_type.Type, object.Array.Type)
 						os.Exit(1)
 
@@ -85,7 +84,7 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 						os.Exit(1)
 					}
 
-					if object.Primitive.Type != variable_type.Type {
+					if object.Primitive.Type != variable_type.Primitive.Type {
 						fmt.Printf("primitive of type %+v  can not assigned to type of %+v\n", variable_type.Type, object.Primitive.Type)
 						os.Exit(1)
 
@@ -99,8 +98,8 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 			var_type := stmt.Decl.Type
 			assign_type := Type_Check_Assign(stmt.Decl.Assign, symbol_env)
 
-			if var_type.DataStructType != assign_type.DataStructType {
-				fmt.Printf("data structure mismatch %+v: %+v\n", var_type.DataStructType, assign_type.DataStructType)
+			if var_type.Type != assign_type.Type {
+				fmt.Printf("data structure mismatch %+v: %+v\n", var_type.Type, assign_type.Type)
 				os.Exit(1)
 
 			}
@@ -111,15 +110,15 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 
 			}
 
-			switch var_type.DataStructType {
+			switch var_type.Type {
 			case basic_type.PRIMITIVE:
 				{
-					primitive := parser.PrimitiveObj{Type: var_type.Type}
+					primitive := parser.PrimitiveObj{Type: var_type.Primitive.Type}
 					symbol_env.Table[stmt.Decl.Id] = parser.Object{Type: parser.PrimitiveType, Primitive: &primitive}
 				}
 			case basic_type.ARRAY:
 				{
-					array := parser.ArrayObj{Type: var_type.Type}
+					array := parser.ArrayObj{Type: var_type.Array.Type.Primitive.Type}
 					symbol_env.Table[stmt.Decl.Id] = parser.Object{Type: parser.ArrayType, Array: &array}
 				}
 
@@ -130,7 +129,11 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 		{
 			_ = Type_Check_Cmp(&stmt.For.Cmp_expr, symbol_env)
 
-			if stmt.For.Cmp_expr.Type != basic_type.BOOL {
+			if stmt.For.Cmp_expr.Type.Type != basic_type.PRIMITIVE {
+				fmt.Printf("if conditional expression should be primitive: got %+v\n", stmt.For.Cmp_expr.Type)
+				os.Exit(1)
+			}
+			if stmt.For.Cmp_expr.Type.Primitive.Type != basic_type.BOOL {
 				fmt.Printf("if conditional expression should return bool type: return %+v\n", stmt.For.Cmp_expr.Type)
 				os.Exit(1)
 			}
@@ -144,8 +147,12 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 		{
 			_ = Type_Check_Cmp(&stmt.If.Cmp_expr, symbol_env)
 
-			if stmt.If.Cmp_expr.Type != basic_type.BOOL {
-				fmt.Printf("if conditional expression should return bool type: return %+v\n", stmt.If.Cmp_expr.Type)
+			if stmt.For.Cmp_expr.Type.Type != basic_type.PRIMITIVE {
+				fmt.Printf("if conditional expression should be primitive: got %+v\n", stmt.For.Cmp_expr.Type)
+				os.Exit(1)
+			}
+			if stmt.For.Cmp_expr.Type.Primitive.Type != basic_type.BOOL {
+				fmt.Printf("if conditional expression should return bool type: return %+v\n", stmt.For.Cmp_expr.Type)
 				os.Exit(1)
 			}
 
@@ -178,7 +185,13 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 			Child_env := &parser.Symbol_Env{Table: parser.Symbol_Table{}, Parent_Env: symbol_env}
 
 			for _, arg := range stmt.Def.Args {
-				Child_env.Table[arg.Ident] = parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Type: arg.Type}}
+
+				if stmt.For.Cmp_expr.Type.Type != basic_type.PRIMITIVE {
+					fmt.Printf("def argument should be primitive: got %+v\n", stmt.For.Cmp_expr.Type)
+					os.Exit(1)
+				}
+
+				Child_env.Table[arg.Ident] = parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Type: arg.Type.Primitive.Type}}
 			}
 
 			Child_env.Return_Type = function.Function.Return_type

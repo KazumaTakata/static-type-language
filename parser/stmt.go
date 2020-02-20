@@ -99,7 +99,7 @@ type If_stmt struct {
 }
 
 type Return_stmt struct {
-	Type     basic_type.Type
+	Type     basic_type.Variable_Type
 	Cmp_expr Cmp_expr
 }
 
@@ -115,7 +115,7 @@ type Stmt struct {
 }
 type Func_param struct {
 	Ident string
-	Type  basic_type.Type
+	Type  basic_type.Variable_Type
 }
 
 type Def_stmt struct {
@@ -123,7 +123,7 @@ type Def_stmt struct {
 	Id           string
 	Args         []Func_param
 	Stmts        []Stmt
-	Return_type  basic_type.Type
+	Return_type  basic_type.Variable_Type
 	Return_value *Object
 }
 
@@ -138,7 +138,7 @@ type Decl_stmt struct {
 	Assign *Assign
 }
 type Array struct {
-	Type      basic_type.Type
+	Type      basic_type.Variable_Type
 	InitValue []*Cmp_expr
 }
 
@@ -183,13 +183,12 @@ func parse_Type(tokens *Parser_Input) basic_type.Variable_Type {
 		tokens.eat(lexer.RSQUARE)
 		ident_type := tokens.assert_next(lexer.DECL_TYPE)
 
-		return basic_type.Variable_Type{Type: getBasicType[ident_type.Value], DataStructType: basic_type.ARRAY}
+		return basic_type.Variable_Type{Type: basic_type.ARRAY, Array: &basic_type.ArrayType{Type: basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[ident_type.Value]}}}}
 
 	} else {
 		ident_type := tokens.assert_next(lexer.DECL_TYPE)
-		return basic_type.Variable_Type{Type: getBasicType[ident_type.Value], DataStructType: basic_type.PRIMITIVE}
+		return basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[ident_type.Value]}}
 	}
-
 }
 
 func parse_Init(tokens *Parser_Input) Init {
@@ -211,7 +210,7 @@ func parse_Init(tokens *Parser_Input) Init {
 
 			tokens.eat(lexer.RCURL)
 
-			array := Array{Type: getBasicType[ident_type.Value], InitValue: cmp_exprs}
+			array := Array{Type: basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[ident_type.Value]}}, InitValue: cmp_exprs}
 
 			init := Init{Type: ARRAY_INIT, Array: &array}
 
@@ -333,7 +332,7 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				for tokens.peek().Type != lexer.RPAREN {
 					id := tokens.assert_next(lexer.IDENT)
 					id_type := tokens.assert_next(lexer.DECL_TYPE)
-					param := Func_param{Ident: id.Value, Type: getBasicType[id_type.Value]}
+					param := Func_param{Ident: id.Value, Type: basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[id_type.Value]}}}
 					args = append(args, param)
 
 					if tokens.peek().Type != lexer.RPAREN {
@@ -347,7 +346,7 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				stmts := Parse_Stmts(tokens)
 				tokens.eat(lexer.RCURL)
 
-				def_expr := Def_stmt{Id: func_name.Value, Args: args, Stmts: stmts, Return_type: getBasicType[return_type.Value]}
+				def_expr := Def_stmt{Id: func_name.Value, Args: args, Stmts: stmts, Return_type: basic_type.Variable_Type{Type: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[return_type.Value]}}}
 				stmt.Def = &def_expr
 				stmt.Type = DEF_STMT
 
