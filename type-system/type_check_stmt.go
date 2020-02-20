@@ -163,8 +163,8 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 
 			stmt.Return.Type = stmt.Return.Cmp_expr.Type
 
-			if symbol_env.Return_Type != stmt.Return.Type {
-				fmt.Printf("func return type mismatch :expect %+v, got%+v\n", symbol_env.Return_Type, stmt.Return.Type)
+			if !basic_type.Variable_Equal(symbol_env.Return_Type, stmt.Return.Type) {
+				fmt.Printf("func return type mismatch :expect %+v, got%+v\n", symbol_env.Return_Type.Primitive, stmt.Return.Type.Primitive)
 				os.Exit(1)
 
 			}

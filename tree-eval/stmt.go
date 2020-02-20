@@ -158,37 +158,53 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 	case parser.EXPR:
 		{
 
-			if stmt.Expr.Type.DataStructType == basic_type.PRIMITIVE {
+			switch stmt.Expr.Type.DataStructType {
+			case basic_type.PRIMITIVE:
+				{
 
-				switch stmt.Expr.Type.Primitive.Type {
-				case basic_type.INT:
-					{
-						result := Arith_Terms_INT(stmt.Expr.Terms, symbol_env)
-						fmt.Printf("%+v\n", result)
+					switch stmt.Expr.Type.Primitive.Type {
+					case basic_type.INT:
+						{
+							result := Arith_Terms_INT(stmt.Expr.Terms, symbol_env)
+							fmt.Printf("%+v\n", result)
+
+						}
+					case basic_type.DOUBLE:
+						{
+							result := Arith_Terms_DOUBLE(stmt.Expr.Terms, symbol_env)
+
+							fmt.Printf("%+v\n", result)
+
+						}
+					case basic_type.STRING:
+						{
+							result := Arith_Terms_STRING(stmt.Expr.Terms, symbol_env)
+
+							fmt.Printf("%+v\n", result)
+
+						}
+					case basic_type.BOOL:
+						{
+							result := Arith_Terms_BOOL(stmt.Expr.Terms, symbol_env)
+
+							fmt.Printf("%+v\n", result)
+
+						}
 
 					}
-				case basic_type.DOUBLE:
-					{
-						result := Arith_Terms_DOUBLE(stmt.Expr.Terms, symbol_env)
+				}
+			case basic_type.ARRAY:
+				{
+					object := resolve_variable(stmt.Expr.Terms[0].Term.Factors[0].Factor.Id, symbol_env)
+					fmt.Printf("[")
+					for i, ele := range object.Array.Value {
+						fmt.Printf("%+v", ele.Int)
 
-						fmt.Printf("%+v\n", result)
-
+						if i != len(object.Array.Value)-1 {
+							fmt.Printf(", ")
+						}
 					}
-				case basic_type.STRING:
-					{
-						result := Arith_Terms_STRING(stmt.Expr.Terms, symbol_env)
-
-						fmt.Printf("%+v\n", result)
-
-					}
-				case basic_type.BOOL:
-					{
-						result := Arith_Terms_BOOL(stmt.Expr.Terms, symbol_env)
-
-						fmt.Printf("%+v\n", result)
-
-					}
-
+					fmt.Printf("]")
 				}
 			}
 

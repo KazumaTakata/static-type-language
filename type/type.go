@@ -55,6 +55,33 @@ func (e DataStructType) String() string {
 	}
 }
 
+func Variable_Equal(var1 Variable_Type, var2 Variable_Type) bool {
+
+	switch var1.DataStructType {
+	case ARRAY:
+		{
+
+			if var1.DataStructType != var2.DataStructType {
+				return false
+			}
+
+			return Variable_Equal(var1.Array.ElementType, var2.Array.ElementType)
+
+		}
+	case PRIMITIVE:
+		{
+			if var1.Primitive.Type == var2.Primitive.Type {
+				return true
+			} else {
+				return false
+			}
+		}
+	}
+
+	return false
+
+}
+
 type Variable_Type struct {
 	DataStructType DataStructType
 	Array          *ArrayType
