@@ -48,6 +48,19 @@ func Type_Check_Assign(assign *parser.Assign, symbol_env *parser.Symbol_Env) bas
 
 }
 
+func get_Array_Element_Type(nest int, array parser.ArrayObj) basic_type.Variable_Type {
+	elementtype := array.ElementType
+	nest -= 1
+
+	for nest != 0 {
+		elementtype = elementtype.Array.ElementType
+		nest -= 1
+	}
+
+	return elementtype
+
+}
+
 func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 	switch stmt.Type {
 	case parser.EXPR:
@@ -61,35 +74,42 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 			variable_type := Type_Check_Assign(stmt.Assign.Assign, symbol_env)
 			object := resolve_name(stmt.Assign.Id, symbol_env)
 
-			switch variable_type.DataStructType {
-			case basic_type.ARRAY:
+			switch object.Type {
+			case parser.ArrayType:
 				{
-					if object.Type != parser.ArrayType {
-						fmt.Printf("array value can not assigned to %+v  varieble\n", object.Type)
-						os.Exit(1)
+
+					for i, _ := range stmt.Assign.Indexs {
+						index_type := Type_Check_Arith(&stmt.Assign.Indexs[i], symbol_env)
+						if index_type.Primitive.Type != basic_type.INT {
+							fmt.Printf("index type not int")
+							os.Exit(1)
+						}
 					}
 
-					if object.Array.ElementType.Primitive.Type != variable_type.Array.ElementType.Primitive.Type {
-						fmt.Printf("array of type %+v can not assigned to type of %+v\n", variable_type.DataStructType, object.Array.ElementType)
+					number_of_nest := len(stmt.Assign.Indexs)
+					arrayelementtype := get_Array_Element_Type(number_of_nest, *object.Array)
+
+					if !basic_type.Variable_Equal(arrayelementtype, variable_type) {
+						fmt.Printf("\nassignment type mismatch %+v:%+v\n", variable_type, arrayelementtype)
 						os.Exit(1)
 
 					}
 
 				}
-
-			case basic_type.PRIMITIVE:
+			case parser.PrimitiveType:
 				{
-					if object.Type != parser.PrimitiveType {
-						fmt.Printf("primitive value can not assigned to %+v  varieble\n", object.Type)
+
+					if variable_type.DataStructType != basic_type.PRIMITIVE {
+						fmt.Printf("data structure mismatch not primitive\n")
 						os.Exit(1)
 					}
 
 					if object.Primitive.Type != variable_type.Primitive.Type {
-						fmt.Printf("primitive of type %+v  can not assigned to type of %+v\n", variable_type.DataStructType, object.Primitive.Type)
+						fmt.Printf("primitive value can not assigned to %+v  varieble\n", object.Type)
 						os.Exit(1)
-
 					}
 				}
+
 			}
 		}
 

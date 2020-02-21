@@ -130,6 +130,7 @@ type Def_stmt struct {
 type Assign_stmt struct {
 	Id     string
 	Assign *Assign
+	Indexs []Arith_expr
 }
 
 type Decl_stmt struct {
@@ -245,6 +246,26 @@ func parse_Assign(tokens *Parser_Input) Assign {
 	return assign
 }
 
+func parse_AssignStmt(tokens *Parser_Input) (Assign_stmt, bool) {
+	ident := tokens.assert_next(lexer.IDENT)
+	indexs := []Arith_expr{}
+	for !tokens.empty() && tokens.peek().Type == lexer.LSQUARE {
+		tokens.eat(lexer.LSQUARE)
+		expr := Parse_Arith_expr(tokens)
+		indexs = append(indexs, expr)
+		tokens.eat(lexer.RSQUARE)
+	}
+
+	if !tokens.empty() && tokens.peek().Type == lexer.ASSIGN {
+		tokens.eat(lexer.ASSIGN)
+	} else {
+		return Assign_stmt{}, false
+	}
+	assign := parse_Assign(tokens)
+	assign_stmt := Assign_stmt{Id: ident.Value, Assign: &assign, Indexs: indexs}
+	return assign_stmt, true
+}
+
 func Parse_Stmt(tokens *Parser_Input) Stmt {
 
 	stmt := Stmt{}
@@ -266,20 +287,18 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 			}
 		case lexer.IDENT:
 			{
-				if len(tokens.Tokens) > 1 && tokens.peek2().Type == lexer.ASSIGN {
-					ident := tokens.assert_next(lexer.IDENT)
-					tokens.eat(lexer.ASSIGN)
-					assign := parse_Assign(tokens)
-					assign_stmt := Assign_stmt{Id: ident.Value, Assign: &assign}
-					stmt.Assign = &assign_stmt
-					stmt.Type = ASSIGN_STMT
+				prev_pos := tokens.Pos
+				assign_stmt, success := parse_AssignStmt(tokens)
 
-				} else {
-
+				if !success {
+					tokens.Pos = prev_pos
 					expr := Parse_Arith_expr(tokens)
 					stmt.Expr = &expr
 					stmt.Type = EXPR
 
+				} else {
+					stmt.Assign = &assign_stmt
+					stmt.Type = ASSIGN_STMT
 				}
 			}
 		case lexer.INT, lexer.DOUBLE, lexer.STRING:
@@ -331,22 +350,22 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				args := []Func_param{}
 				for tokens.peek().Type != lexer.RPAREN {
 					id := tokens.assert_next(lexer.IDENT)
-					id_type := tokens.assert_next(lexer.DECL_TYPE)
-					param := Func_param{Ident: id.Value, Type: basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[id_type.Value]}}}
+					param_type := parse_Type(tokens)
+					param := Func_param{Ident: id.Value, Type: param_type}
 					args = append(args, param)
-
 					if tokens.peek().Type != lexer.RPAREN {
 						tokens.eat(lexer.COMMA)
 					}
 				}
 				tokens.eat(lexer.RPAREN)
-				return_type := tokens.assert_next(lexer.DECL_TYPE)
+
+				return_type := parse_Type(tokens)
 
 				tokens.eat(lexer.LCURL)
 				stmts := Parse_Stmts(tokens)
 				tokens.eat(lexer.RCURL)
 
-				def_expr := Def_stmt{Id: func_name.Value, Args: args, Stmts: stmts, Return_type: basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[return_type.Value]}}}
+				def_expr := Def_stmt{Id: func_name.Value, Args: args, Stmts: stmts, Return_type: return_type}
 				stmt.Def = &def_expr
 				stmt.Type = DEF_STMT
 

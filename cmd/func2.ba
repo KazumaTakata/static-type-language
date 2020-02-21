@@ -1,0 +1,16 @@
+
+
+def gen_arr() []int {
+   var x []int = []int{3,3}
+   return x 
+}
+
+var y []int = gen_arr() 
+
+y
+
+
+
+
+
+

@@ -64,34 +64,50 @@ func Eval_Assign(assign parser.Assign, symbol_env *parser.Symbol_Env) parser.Obj
 
 func Calc_Arith(expr *parser.Arith_expr, symbol_env *parser.Symbol_Env) parser.Object {
 
-	if expr.Type.DataStructType == basic_type.PRIMITIVE {
-		switch expr.Type.Primitive.Type {
-		case basic_type.INT:
-			{
-				result := Arith_Terms_INT(expr.Terms, symbol_env)
-				return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Int: result, Type: basic_type.INT}}
+	switch expr.Type.DataStructType {
+	case basic_type.PRIMITIVE:
+		{
+			switch expr.Type.Primitive.Type {
+			case basic_type.INT:
+				{
+					result := Arith_Terms_INT(expr.Terms, symbol_env)
+					return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Int: result, Type: basic_type.INT}}
+
+				}
+			case basic_type.DOUBLE:
+				{
+					result := Arith_Terms_DOUBLE(expr.Terms, symbol_env)
+					return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Double: result, Type: basic_type.DOUBLE}}
+
+				}
+			case basic_type.STRING:
+				{
+					result := Arith_Terms_STRING(expr.Terms, symbol_env)
+					return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{String: result, Type: basic_type.STRING}}
+
+				}
+
+			case basic_type.BOOL:
+				{
+					result := Arith_Terms_BOOL(expr.Terms, symbol_env)
+					return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Bool: result, Type: basic_type.BOOL}}
+
+				}
 
 			}
-		case basic_type.DOUBLE:
-			{
-				result := Arith_Terms_DOUBLE(expr.Terms, symbol_env)
-				return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Double: result, Type: basic_type.DOUBLE}}
+		}
+
+	case basic_type.ARRAY:
+		{
+			factor := expr.Terms[0].Term.Factors[0].Factor
+			object := resolve_variable(factor.Id, symbol_env)
+
+			if object.Type == parser.FunctionType {
+				returned_value := handle_func_call(object, factor, symbol_env)
+				return *returned_value
 
 			}
-		case basic_type.STRING:
-			{
-				result := Arith_Terms_STRING(expr.Terms, symbol_env)
-				return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{String: result, Type: basic_type.STRING}}
-
-			}
-
-		case basic_type.BOOL:
-			{
-				result := Arith_Terms_BOOL(expr.Terms, symbol_env)
-				return parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Bool: result, Type: basic_type.BOOL}}
-
-			}
-
+			return object
 		}
 	}
 
@@ -142,8 +158,16 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 		{
 
 			result := Eval_Assign(*stmt.Assign.Assign, symbol_env)
-			assign_Table(stmt.Assign.Id, symbol_env, result)
 
+			if len(stmt.Assign.Indexs) > 0 {
+				index := Calc_Arith(&stmt.Assign.Indexs[0], symbol_env)
+				if object, ok := symbol_env.Table[stmt.Assign.Id]; ok {
+					object.Array.Value[index.Primitive.Int] = result.Primitive
+					symbol_env.Table[stmt.Assign.Id] = object
+				}
+			} else {
+				assign_Table(stmt.Assign.Id, symbol_env, result)
+			}
 		}
 
 	case parser.DECL_STMT:
