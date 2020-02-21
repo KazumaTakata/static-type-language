@@ -2,9 +2,9 @@ package parser
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/KazumaTakata/static-typed-language/lexer"
+	"os"
+	"runtime/debug"
 )
 
 type Parser_Input struct {
@@ -16,6 +16,7 @@ func (p *Parser_Input) eat(tokentype lexer.TokenType) {
 	if p.peek().Type == tokentype {
 		p.Pos = p.Pos + 1
 	} else {
+		debug.PrintStack()
 		fmt.Printf("eat is not match:got %+v, expected %+v", tokentype, p.peek().Type)
 		os.Exit(1)
 
@@ -41,6 +42,8 @@ func (p *Parser_Input) next() lexer.Token {
 func (p *Parser_Input) assert_next(tokentype lexer.TokenType) lexer.Token {
 	token := p.peek()
 	if token.Type != tokentype {
+
+		debug.PrintStack()
 		fmt.Printf("assert_next is not match:got %+v, expected %+v\n", p.peek().Type, tokentype)
 		os.Exit(1)
 	}

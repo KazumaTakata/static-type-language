@@ -25,16 +25,9 @@ func Eval_Init(init parser.Init, symbol_env *parser.Symbol_Env) parser.Object {
 			arrayobj := parser.ArrayObj{ElementType: init.Array.ElementType}
 
 			for _, init_value := range init.Array.InitValue {
-				if init.Array.ElementType.DataStructType == basic_type.PRIMITIVE {
-					switch init.Array.ElementType.Primitive.Type {
-					case basic_type.INT:
-						{
-							init_int := Eval_Cmp_Int(*init_value, symbol_env)
-							primitive := parser.PrimitiveObj{Type: basic_type.INT, Int: init_int}
-							arrayobj.Value = append(arrayobj.Value, &primitive)
-						}
-					}
-				}
+				assign := Eval_Assign(*init_value, symbol_env)
+				arrayobj.Value = append(arrayobj.Value, &assign)
+
 			}
 
 			return parser.Object{Type: parser.ArrayType, Array: &arrayobj}
@@ -162,7 +155,7 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 			if len(stmt.Assign.Indexs) > 0 {
 				index := Calc_Arith(&stmt.Assign.Indexs[0], symbol_env)
 				if object, ok := symbol_env.Table[stmt.Assign.Id]; ok {
-					object.Array.Value[index.Primitive.Int] = result.Primitive
+					object.Array.Value[index.Primitive.Int] = &result
 					symbol_env.Table[stmt.Assign.Id] = object
 				}
 			} else {
@@ -221,8 +214,9 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 				{
 					object := resolve_variable(stmt.Expr.Terms[0].Term.Factors[0].Factor.Id, symbol_env)
 					fmt.Printf("[")
+
 					for i, ele := range object.Array.Value {
-						fmt.Printf("%+v", ele.Int)
+						fmt.Printf("%+v", ele.Array.Value[0].Primitive)
 
 						if i != len(object.Array.Value)-1 {
 							fmt.Printf(", ")

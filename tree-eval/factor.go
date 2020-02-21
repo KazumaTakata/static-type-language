@@ -150,7 +150,7 @@ func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.
 		{
 			index := Arith_Terms_INT(factor.AccessIndex.Terms, symbol_env)
 			obj := object.Array.Value[index]
-			return obj
+			return obj.Primitive
 		}
 	default:
 		{

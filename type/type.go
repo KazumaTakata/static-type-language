@@ -15,6 +15,7 @@ const (
 )
 
 var LexerTypeToType = map[lexer.TokenType]Type{lexer.INT: INT, lexer.DOUBLE: DOUBLE, lexer.STRING: STRING}
+var BoolPrimitiveType Variable_Type = Variable_Type{DataStructType: PRIMITIVE, Primitive: &PrimitiveType{Type: BOOL}}
 
 func (e Type) String() string {
 
@@ -80,6 +81,10 @@ func Variable_Equal(var1 Variable_Type, var2 Variable_Type) bool {
 
 	return false
 
+}
+
+func WrapWithArrayType(element_type Variable_Type) Variable_Type {
+	return Variable_Type{DataStructType: ARRAY, Array: &ArrayType{ElementType: element_type}}
 }
 
 type Variable_Type struct {

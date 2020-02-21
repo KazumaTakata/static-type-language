@@ -21,16 +21,16 @@ func Type_Check_Assign(assign *parser.Assign, symbol_env *parser.Symbol_Env) bas
 		switch assign.Init.Type {
 		case parser.ARRAY_INIT:
 			{
-				array_type := assign.Init.Array.ElementType
+				arrayelement_type := assign.Init.Array.ElementType
 				for _, init_value := range assign.Init.Array.InitValue {
-					cmp_type := Type_Check_Cmp(init_value, symbol_env)
-					if array_type.DataStructType != cmp_type.DataStructType {
-						fmt.Printf("array type %+v  mismatch to initialization type %+v\n", array_type, cmp_type)
+					assign_type := Type_Check_Assign(init_value, symbol_env)
+					if !basic_type.Variable_Equal(arrayelement_type, assign_type) {
+						fmt.Printf("array type %+v  mismatch to initialization type %+v\n", arrayelement_type, assign_type)
 						os.Exit(1)
 					}
 				}
 
-				return basic_type.Variable_Type{DataStructType: basic_type.ARRAY, Array: &basic_type.ArrayType{ElementType: array_type}}
+				return basic_type.Variable_Type{DataStructType: basic_type.ARRAY, Array: &basic_type.ArrayType{ElementType: arrayelement_type}}
 			}
 		case parser.MAP_INIT:
 			{
@@ -143,11 +143,7 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 		{
 			_ = Type_Check_Cmp(&stmt.For.Cmp_expr, symbol_env)
 
-			if stmt.For.Cmp_expr.Type.DataStructType != basic_type.PRIMITIVE {
-				fmt.Printf("if conditional expression should be primitive: got %+v\n", stmt.For.Cmp_expr.Type)
-				os.Exit(1)
-			}
-			if stmt.For.Cmp_expr.Type.Primitive.Type != basic_type.BOOL {
+			if !basic_type.Variable_Equal(stmt.For.Cmp_expr.Type, basic_type.BoolPrimitiveType) {
 				fmt.Printf("if conditional expression should return bool type: return %+v\n", stmt.For.Cmp_expr.Type)
 				os.Exit(1)
 			}
@@ -161,11 +157,7 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 		{
 			_ = Type_Check_Cmp(&stmt.If.Cmp_expr, symbol_env)
 
-			if stmt.If.Cmp_expr.Type.DataStructType != basic_type.PRIMITIVE {
-				fmt.Printf("if conditional expression should be primitive: got %+v\n", stmt.If.Cmp_expr.Type)
-				os.Exit(1)
-			}
-			if stmt.If.Cmp_expr.Type.Primitive.Type != basic_type.BOOL {
+			if !basic_type.Variable_Equal(stmt.If.Cmp_expr.Type, basic_type.BoolPrimitiveType) {
 				fmt.Printf("if conditional expression should return bool type: return %+v\n", stmt.If.Cmp_expr.Type)
 				os.Exit(1)
 			}

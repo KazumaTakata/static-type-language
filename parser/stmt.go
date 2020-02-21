@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-
 	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/type"
 )
@@ -36,7 +35,6 @@ func (e Stmt_Type) String() string {
 		return "RETURN_STMT"
 	case ASSIGN_STMT:
 		return "ASSIGN_STMT"
-
 	default:
 		return fmt.Sprintf("%d", int(e))
 	}
@@ -140,7 +138,7 @@ type Decl_stmt struct {
 }
 type Array struct {
 	ElementType basic_type.Variable_Type
-	InitValue   []*Cmp_expr
+	InitValue   []*Assign
 }
 
 type Map struct{}
@@ -180,11 +178,24 @@ func Parse_Stmts(tokens *Parser_Input) []Stmt {
 func parse_Type(tokens *Parser_Input) basic_type.Variable_Type {
 
 	if tokens.peek().Type == lexer.LSQUARE {
-		tokens.eat(lexer.LSQUARE)
-		tokens.eat(lexer.RSQUARE)
+
+		number_of_nest := 0
+
+		for tokens.peek().Type == lexer.LSQUARE {
+			number_of_nest += 1
+			tokens.eat(lexer.LSQUARE)
+			tokens.eat(lexer.RSQUARE)
+		}
 		ident_type := tokens.assert_next(lexer.DECL_TYPE)
 
-		return basic_type.Variable_Type{DataStructType: basic_type.ARRAY, Array: &basic_type.ArrayType{ElementType: basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[ident_type.Value]}}}}
+		element_type := basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[ident_type.Value]}}
+
+		for number_of_nest != 0 {
+			element_type = basic_type.WrapWithArrayType(element_type)
+			number_of_nest -= 1
+		}
+
+		return element_type
 
 	} else {
 		ident_type := tokens.assert_next(lexer.DECL_TYPE)
@@ -196,25 +207,21 @@ func parse_Init(tokens *Parser_Input) Init {
 	switch tokens.peek().Type {
 	case lexer.LSQUARE:
 		{
-			tokens.eat(lexer.LSQUARE)
-			tokens.eat(lexer.RSQUARE)
-			ident_type := tokens.assert_next(lexer.DECL_TYPE)
+			init_type := parse_Type(tokens)
 			tokens.eat(lexer.LCURL)
-			cmp_expr := Parse_Cmp_expr(tokens)
-			cmp_exprs := []*Cmp_expr{&cmp_expr}
 
-			for tokens.peek().Type == lexer.COMMA {
-				tokens.eat(lexer.COMMA)
-				cmp_expr := Parse_Cmp_expr(tokens)
-				cmp_exprs = append(cmp_exprs, &cmp_expr)
+			assigns := []*Assign{}
+			for tokens.peek().Type != lexer.RCURL {
+				assign := parse_Assign(tokens)
+				assigns = append(assigns, &assign)
+
+				if tokens.peek().Type != lexer.RCURL {
+					tokens.eat(lexer.COMMA)
+				}
 			}
 
 			tokens.eat(lexer.RCURL)
-
-			array := Array{ElementType: basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[ident_type.Value]}}, InitValue: cmp_exprs}
-
-			init := Init{Type: ARRAY_INIT, Array: &array}
-
+			init := Init{Type: ARRAY_INIT, Array: &Array{ElementType: init_type.Array.ElementType, InitValue: assigns}}
 			return init
 
 		}
