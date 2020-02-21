@@ -177,30 +177,24 @@ func Parse_Stmts(tokens *Parser_Input) []Stmt {
 
 func parse_Type(tokens *Parser_Input) basic_type.Variable_Type {
 
-	if tokens.peek().Type == lexer.LSQUARE {
+	switch tokens.peek().Type {
+	case lexer.LSQUARE:
+		{
 
-		number_of_nest := 0
-
-		for tokens.peek().Type == lexer.LSQUARE {
-			number_of_nest += 1
 			tokens.eat(lexer.LSQUARE)
 			tokens.eat(lexer.RSQUARE)
+
+			element_type := parse_Type(tokens)
+
+			return basic_type.WrapWithArrayType(element_type)
 		}
-		ident_type := tokens.assert_next(lexer.DECL_TYPE)
-
-		element_type := basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[ident_type.Value]}}
-
-		for number_of_nest != 0 {
-			element_type = basic_type.WrapWithArrayType(element_type)
-			number_of_nest -= 1
+	case lexer.DECL_TYPE:
+		{
+			ident_type := tokens.assert_next(lexer.DECL_TYPE)
+			return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[ident_type.Value]}}
 		}
-
-		return element_type
-
-	} else {
-		ident_type := tokens.assert_next(lexer.DECL_TYPE)
-		return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: getBasicType[ident_type.Value]}}
 	}
+	return basic_type.Variable_Type{}
 }
 
 func parse_Init(tokens *Parser_Input) Init {

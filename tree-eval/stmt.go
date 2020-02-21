@@ -116,6 +116,17 @@ func assign_Table(id string, symbol_env *parser.Symbol_Env, object parser.Object
 
 }
 
+func assign_to_array_object(object *parser.Object, indexs []int, assign_object parser.Object) *parser.Object {
+	if len(indexs) == 1 {
+		object.Array.Value[indexs[0]] = &assign_object
+		return object
+	}
+	object.Array.Value[indexs[0]] = assign_to_array_object(object.Array.Value[indexs[0]], indexs[1:], assign_object)
+
+	return object
+
+}
+
 func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 
 	switch stmt.Type {
@@ -153,9 +164,14 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 			result := Eval_Assign(*stmt.Assign.Assign, symbol_env)
 
 			if len(stmt.Assign.Indexs) > 0 {
-				index := Calc_Arith(&stmt.Assign.Indexs[0], symbol_env)
+				//index := Calc_Arith(&stmt.Assign.Indexs[0], symbol_env)
 				if object, ok := symbol_env.Table[stmt.Assign.Id]; ok {
-					object.Array.Value[index.Primitive.Int] = &result
+					indexs := []int{}
+					for _, index := range stmt.Assign.Indexs {
+						index := Calc_Arith(&index, symbol_env)
+						indexs = append(indexs, index.Primitive.Int)
+					}
+					object = *assign_to_array_object(&object, indexs, result)
 					symbol_env.Table[stmt.Assign.Id] = object
 				}
 			} else {
@@ -213,16 +229,7 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 			case basic_type.ARRAY:
 				{
 					object := resolve_variable(stmt.Expr.Terms[0].Term.Factors[0].Factor.Id, symbol_env)
-					fmt.Printf("[")
-
-					for i, ele := range object.Array.Value {
-						fmt.Printf("%+v", ele.Array.Value[0].Primitive)
-
-						if i != len(object.Array.Value)-1 {
-							fmt.Printf(", ")
-						}
-					}
-					fmt.Printf("]")
+					parser.PrintObject(object)
 				}
 			}
 

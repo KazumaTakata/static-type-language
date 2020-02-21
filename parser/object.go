@@ -56,3 +56,44 @@ type Symbol_Env struct {
 	Return_Value *Object
 	Return_Type  basic_type.Variable_Type
 }
+
+func PrintObject(object Object) {
+	switch object.Type {
+	case PrimitiveType:
+		{
+			printPrimitive(*object.Primitive)
+		}
+	case ArrayType:
+		{
+			fmt.Printf("[")
+			for i, element := range object.Array.Value {
+				PrintObject(*element)
+
+				if len(object.Array.Value)-1 != i {
+					fmt.Printf(", ")
+				}
+			}
+			fmt.Printf("]")
+
+		}
+	}
+}
+
+func printPrimitive(primitive PrimitiveObj) {
+
+	switch primitive.Type {
+	case basic_type.INT:
+		{
+			fmt.Printf("%d", primitive.Int)
+		}
+	case basic_type.DOUBLE:
+		{
+			fmt.Printf("%v", primitive.Double)
+		}
+	case basic_type.STRING:
+		{
+			fmt.Printf("%s", primitive.String)
+		}
+	}
+
+}
