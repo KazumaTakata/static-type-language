@@ -127,6 +127,27 @@ func assign_to_array_object(object *parser.Object, indexs []int, assign_object p
 
 }
 
+func eval_Assign(assign *parser.Assign_stmt, symbol_env *parser.Symbol_Env) {
+
+	result := Eval_Assign(*assign.Assign, symbol_env)
+
+	if len(assign.Indexs) > 0 {
+		//index := Calc_Arith(&stmt.Assign.Indexs[0], symbol_env)
+		object := resolve_variable(assign.Id, symbol_env)
+		indexs := []int{}
+		for _, index := range assign.Indexs {
+			index := Calc_Arith(&index, symbol_env)
+			indexs = append(indexs, index.Primitive.Int)
+		}
+		object = *assign_to_array_object(&object, indexs, result)
+		symbol_env.Table[assign.Id] = object
+
+	} else {
+		assign_Table(assign.Id, symbol_env, result)
+	}
+
+}
+
 func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 
 	switch stmt.Type {
@@ -146,8 +167,25 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 
 	case parser.FOR_STMT:
 		{
-			for Eval_Cmp_Bool(stmt.For.Cmp_expr, symbol_env) {
-				Eval_Stmts(stmt.For.Stmts, stmt.For.Symbol_Env)
+			switch stmt.For.Type {
+			case parser.Cmp:
+				{
+					for Eval_Cmp_Bool(stmt.For.Cmp_expr, symbol_env) {
+						Eval_Stmts(stmt.For.Stmts, stmt.For.Symbol_Env)
+					}
+				}
+			case parser.DeclCmpAssign:
+				{
+
+					result := Eval_Assign(*stmt.For.Decl.Assign, stmt.For.Symbol_Env)
+					stmt.For.Symbol_Env.Table[stmt.For.Decl.Id] = result
+
+					for Eval_Cmp_Bool(stmt.For.Cmp_expr, stmt.For.Symbol_Env) {
+						Eval_Stmts(stmt.For.Stmts, stmt.For.Symbol_Env)
+						eval_Assign(&stmt.For.Assign, stmt.For.Symbol_Env)
+					}
+
+				}
 			}
 
 		}
@@ -165,15 +203,15 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 
 			if len(stmt.Assign.Indexs) > 0 {
 				//index := Calc_Arith(&stmt.Assign.Indexs[0], symbol_env)
-				if object, ok := symbol_env.Table[stmt.Assign.Id]; ok {
-					indexs := []int{}
-					for _, index := range stmt.Assign.Indexs {
-						index := Calc_Arith(&index, symbol_env)
-						indexs = append(indexs, index.Primitive.Int)
-					}
-					object = *assign_to_array_object(&object, indexs, result)
-					symbol_env.Table[stmt.Assign.Id] = object
+				object := resolve_variable(stmt.Assign.Id, symbol_env)
+				indexs := []int{}
+				for _, index := range stmt.Assign.Indexs {
+					index := Calc_Arith(&index, symbol_env)
+					indexs = append(indexs, index.Primitive.Int)
 				}
+				object = *assign_to_array_object(&object, indexs, result)
+				symbol_env.Table[stmt.Assign.Id] = object
+
 			} else {
 				assign_Table(stmt.Assign.Id, symbol_env, result)
 			}

@@ -30,6 +30,7 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"RSQUARE", "\\]"})
 
 	lexer_rules = append(lexer_rules, []string{"COMMA", ","})
+	lexer_rules = append(lexer_rules, []string{"SEMICOLON", ";"})
 
 	//keyword
 	lexer_rules = append(lexer_rules, []string{"DEF", "def"})
@@ -96,6 +97,7 @@ const (
 	RSQUARE
 	MAP
 	NEW
+	SEMICOLON
 )
 
 func (e TokenType) String() string {
@@ -165,6 +167,8 @@ func (e TokenType) String() string {
 		return "MAP"
 	case NEW:
 		return "NEW"
+	case SEMICOLON:
+		return "SEMICOLON"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -204,6 +208,7 @@ var tokenmap map[string]TokenType = map[string]TokenType{
 	"RSQUARE":   RSQUARE,
 	"MAP":       MAP,
 	"NEW":       NEW,
+	"SEMICOLON": SEMICOLON,
 }
 
 type Token struct {

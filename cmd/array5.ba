@@ -1,0 +1,3 @@
+
+var y []string = []string{ "sample" + "aaa", "one" }
+y[0]

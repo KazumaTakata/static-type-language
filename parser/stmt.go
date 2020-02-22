@@ -78,6 +78,24 @@ func (e AssignType) String() string {
 	}
 }
 
+type ForType int
+
+const (
+	DeclCmpAssign ForType = iota + 1
+	Cmp
+)
+
+func (e ForType) String() string {
+	switch e {
+	case DeclCmpAssign:
+		return "DeclCmpAssign"
+	case Cmp:
+		return "Cmp"
+	default:
+		return fmt.Sprintf("%d", int(e))
+	}
+}
+
 type Assign struct {
 	Type AssignType
 	Expr *Cmp_expr
@@ -85,8 +103,11 @@ type Assign struct {
 }
 
 type For_stmt struct {
+	Type       ForType
 	Symbol_Env *Symbol_Env
 	Cmp_expr   Cmp_expr
+	Decl       Decl_stmt
+	Assign     Assign_stmt
 	Stmts      []Stmt
 }
 
@@ -267,6 +288,18 @@ func parse_AssignStmt(tokens *Parser_Input) (Assign_stmt, bool) {
 	return assign_stmt, true
 }
 
+func parse_Decl(tokens *Parser_Input) Decl_stmt {
+	tokens.eat(lexer.VAR)
+	ident := tokens.assert_next(lexer.IDENT)
+	variable_type := parse_Type(tokens)
+	tokens.eat(lexer.ASSIGN)
+	assign := parse_Assign(tokens)
+	decl_stmt := Decl_stmt{Id: ident.Value, Type: variable_type, Assign: &assign}
+
+	return decl_stmt
+
+}
+
 func Parse_Stmt(tokens *Parser_Input) Stmt {
 
 	stmt := Stmt{}
@@ -276,12 +309,13 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 		switch tokens.peek().Type {
 		case lexer.VAR:
 			{
-				tokens.eat(lexer.VAR)
-				ident := tokens.assert_next(lexer.IDENT)
-				variable_type := parse_Type(tokens)
-				tokens.eat(lexer.ASSIGN)
-				assign := parse_Assign(tokens)
-				decl_stmt := Decl_stmt{Id: ident.Value, Type: variable_type, Assign: &assign}
+				/*             tokens.eat(lexer.VAR)*/
+				//ident := tokens.assert_next(lexer.IDENT)
+				//variable_type := parse_Type(tokens)
+				//tokens.eat(lexer.ASSIGN)
+				//assign := parse_Assign(tokens)
+				/*decl_stmt := Decl_stmt{Id: ident.Value, Type: variable_type, Assign: &assign}*/
+				decl_stmt := parse_Decl(tokens)
 				stmt.Decl = &decl_stmt
 				stmt.Type = DECL_STMT
 
@@ -291,15 +325,16 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				prev_pos := tokens.Pos
 				assign_stmt, success := parse_AssignStmt(tokens)
 
-				if !success {
+				if success {
+					stmt.Assign = &assign_stmt
+					stmt.Type = ASSIGN_STMT
+
+				} else {
 					tokens.Pos = prev_pos
 					expr := Parse_Arith_expr(tokens)
 					stmt.Expr = &expr
 					stmt.Type = EXPR
 
-				} else {
-					stmt.Assign = &assign_stmt
-					stmt.Type = ASSIGN_STMT
 				}
 			}
 		case lexer.INT, lexer.DOUBLE, lexer.STRING:
@@ -312,14 +347,30 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 		case lexer.FOR:
 			{
 				tokens.eat(lexer.FOR)
-				expr := Parse_Cmp_expr(tokens)
-				tokens.eat(lexer.LCURL)
-				stmts := Parse_Stmts(tokens)
-				tokens.eat(lexer.RCURL)
-				for_expr := For_stmt{Cmp_expr: expr, Stmts: stmts}
-				stmt.For = &for_expr
-				stmt.Type = FOR_STMT
+				if tokens.peek().Type == lexer.VAR {
+					decl_stmt := parse_Decl(tokens)
+					tokens.eat(lexer.SEMICOLON)
+					expr := Parse_Cmp_expr(tokens)
+					tokens.eat(lexer.SEMICOLON)
+					assign_stmt, _ := parse_AssignStmt(tokens)
 
+					tokens.eat(lexer.LCURL)
+					stmts := Parse_Stmts(tokens)
+					tokens.eat(lexer.RCURL)
+
+					for_expr := For_stmt{Type: DeclCmpAssign, Cmp_expr: expr, Stmts: stmts, Decl: decl_stmt, Assign: assign_stmt}
+					stmt.For = &for_expr
+					stmt.Type = FOR_STMT
+
+				} else {
+					expr := Parse_Cmp_expr(tokens)
+					tokens.eat(lexer.LCURL)
+					stmts := Parse_Stmts(tokens)
+					tokens.eat(lexer.RCURL)
+					for_expr := For_stmt{Type: Cmp, Cmp_expr: expr, Stmts: stmts}
+					stmt.For = &for_expr
+					stmt.Type = FOR_STMT
+				}
 			}
 		case lexer.IF:
 			{
