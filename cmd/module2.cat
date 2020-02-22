@@ -1,3 +1,9 @@
-import module
+import bubble_sort 
 
-module.x
+var y []int = []int{0, 13, 10, 3, 0}
+
+
+var x []int = bubble_sort.bubble_sort(y)
+
+
+x
