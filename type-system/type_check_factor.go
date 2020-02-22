@@ -98,13 +98,14 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 				}
 				return function.Return_type
 			}
+		case parser.Resolve:
+			{
+				module_obj := symbol_env.Table[factor.Id]
+				return get_Type_of_Factor(*factor.Factor, module_obj.Env)
+			}
+
 		case parser.ArrayMapAccess:
 			{
-
-				/* if object.Type != parser.ArrayType {*/
-				//fmt.Printf("\nvariable %s is not function\n", factor.Id)
-				//os.Exit(1)
-				//}
 
 				index_type := Type_Check_Arith(factor.AccessIndex, symbol_env)
 				if index_type.DataStructType != basic_type.PRIMITIVE {

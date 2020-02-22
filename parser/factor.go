@@ -12,6 +12,7 @@ const (
 	FuncCall FactorType = iota + 1
 	ArrayMapAccess
 	Primitive
+	Resolve
 )
 
 func (e FactorType) String() string {
@@ -19,6 +20,8 @@ func (e FactorType) String() string {
 	switch e {
 	case FuncCall:
 		return "FuncCall"
+	case Resolve:
+		return "Resolve"
 	case ArrayMapAccess:
 		return "ArrayMapAccess"
 	case Primitive:
@@ -38,6 +41,7 @@ type Factor struct {
 	FactorType  FactorType
 	Args        []lexer.Token
 	AccessIndex *Arith_expr
+	Factor      *Factor
 }
 
 func parse_Factor(tokens *Parser_Input) Factor {
@@ -85,6 +89,12 @@ func parse_Factor(tokens *Parser_Input) Factor {
 				tokens.eat(lexer.RSQUARE)
 
 				return Factor{AccessIndex: &index, Id: ident_token.Value, Type: lexer.IDENT, FactorType: ArrayMapAccess}
+
+			} else if !tokens.empty() && tokens.peek().Type == lexer.DOT {
+				tokens.eat(lexer.DOT)
+
+				childfactor := parse_Factor(tokens)
+				return Factor{Type: lexer.IDENT, FactorType: Resolve, Id: ident_token.Value, Factor: &childfactor}
 
 			} else {
 

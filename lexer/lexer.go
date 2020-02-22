@@ -28,10 +28,10 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"RCURL", "\\}"})
 	lexer_rules = append(lexer_rules, []string{"LSQUARE", "\\["})
 	lexer_rules = append(lexer_rules, []string{"RSQUARE", "\\]"})
+	lexer_rules = append(lexer_rules, []string{"DOT", "\\."})
 
 	lexer_rules = append(lexer_rules, []string{"COMMA", ","})
 	lexer_rules = append(lexer_rules, []string{"SEMICOLON", ";"})
-
 	//keyword
 	lexer_rules = append(lexer_rules, []string{"DEF", "def"})
 	lexer_rules = append(lexer_rules, []string{"VAR", "var"})
@@ -100,6 +100,7 @@ const (
 	NEW
 	SEMICOLON
 	IMPORT
+	DOT
 )
 
 func (e TokenType) String() string {
@@ -173,6 +174,8 @@ func (e TokenType) String() string {
 		return "SEMICOLON"
 	case IMPORT:
 		return "IMPORT"
+	case DOT:
+		return "DOT"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -214,6 +217,7 @@ var tokenmap map[string]TokenType = map[string]TokenType{
 	"NEW":       NEW,
 	"SEMICOLON": SEMICOLON,
 	"IMPORT":    IMPORT,
+	"DOT":       DOT,
 }
 
 type Token struct {

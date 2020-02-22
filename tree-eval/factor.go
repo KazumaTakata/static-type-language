@@ -78,7 +78,7 @@ func Arith_Factors_INT(factors []parser.TermElement, symbol_env *parser.Symbol_E
 		if factors[0].Factor.Type == lexer.IDENT {
 
 			variable := resolve_ident(factors[0].Factor, symbol_env)
-			return variable.Int
+			return variable.Primitive.Int
 
 		} else {
 			return factors[0].Factor.Int
@@ -93,7 +93,7 @@ func Arith_Factors_INT(factors []parser.TermElement, symbol_env *parser.Symbol_E
 			if factor.Factor.Type == lexer.IDENT {
 
 				variable := resolve_ident(factor.Factor, symbol_env)
-				result = variable.Int
+				result = variable.Primitive.Int
 
 			} else {
 				result = factor.Factor.Int
@@ -107,7 +107,7 @@ func Arith_Factors_INT(factors []parser.TermElement, symbol_env *parser.Symbol_E
 				if factor.Factor.Type == lexer.IDENT {
 
 					variable := resolve_ident(factor.Factor, symbol_env)
-					result = result * variable.Int
+					result = result * variable.Primitive.Int
 
 				} else {
 					result = result * factor.Factor.Int
@@ -119,7 +119,7 @@ func Arith_Factors_INT(factors []parser.TermElement, symbol_env *parser.Symbol_E
 				if factor.Factor.Type == lexer.IDENT {
 
 					variable := resolve_ident(factor.Factor, symbol_env)
-					result = result / variable.Int
+					result = result / variable.Primitive.Int
 				} else {
 					result = result / factor.Factor.Int
 				}
@@ -131,25 +131,31 @@ func Arith_Factors_INT(factors []parser.TermElement, symbol_env *parser.Symbol_E
 	return result
 }
 
-func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.PrimitiveObj {
+func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.Object {
 	object := resolve_variable(factor.Id, symbol_env)
 
 	switch factor.FactorType {
 	case parser.FuncCall:
 		{
 			returned_value := handle_func_call(object, factor, symbol_env)
-			return returned_value.Primitive
+			return returned_value
 
 		}
 	case parser.ArrayMapAccess:
 		{
 			index := Arith_Terms_INT(factor.AccessIndex.Terms, symbol_env)
 			obj := object.Array.Value[index]
-			return obj.Primitive
+			return obj
 		}
+	case parser.Resolve:
+		{
+			module_env := symbol_env.Table[factor.Id]
+			return resolve_ident(*factor.Factor, module_env.Env)
+		}
+
 	default:
 		{
-			return object.Primitive
+			return &object
 		}
 
 	}
@@ -160,7 +166,7 @@ func Arith_Factors_STRING(factors []parser.TermElement, symbol_env *parser.Symbo
 
 		if factors[0].Factor.Type == lexer.IDENT {
 			variable := resolve_ident(factors[0].Factor, symbol_env)
-			return variable.String
+			return variable.Primitive.String
 		}
 
 		return factors[0].Factor.String
@@ -175,7 +181,7 @@ func Arith_Factors_BOOL(factors []parser.TermElement, symbol_env *parser.Symbol_
 
 		if factors[0].Factor.Type == lexer.IDENT {
 			variable := resolve_ident(factors[0].Factor, symbol_env)
-			return variable.Bool
+			return variable.Primitive.Bool
 		}
 
 		return factors[0].Factor.Bool
@@ -191,7 +197,7 @@ func Arith_Factors_DOUBLE(factors []parser.TermElement, symbol_env *parser.Symbo
 		if factors[0].Factor.Type == lexer.IDENT {
 			variable := resolve_ident(factors[0].Factor, symbol_env)
 
-			return variable.Double
+			return variable.Primitive.Double
 		}
 
 		return factors[0].Factor.Float
@@ -208,10 +214,10 @@ func Arith_Factors_DOUBLE(factors []parser.TermElement, symbol_env *parser.Symbo
 				{
 					variable := resolve_ident(factor.Factor, symbol_env)
 
-					if variable.Type == basic_type.DOUBLE {
-						result = variable.Double
-					} else if variable.Type == basic_type.INT {
-						result = float64(variable.Int)
+					if variable.Primitive.Type == basic_type.DOUBLE {
+						result = variable.Primitive.Double
+					} else if variable.Primitive.Type == basic_type.INT {
+						result = float64(variable.Primitive.Int)
 					}
 
 				}
@@ -235,10 +241,10 @@ func Arith_Factors_DOUBLE(factors []parser.TermElement, symbol_env *parser.Symbo
 					{
 						variable := resolve_ident(factor.Factor, symbol_env)
 
-						if variable.Type == basic_type.DOUBLE {
-							result = result * variable.Double
-						} else if variable.Type == basic_type.INT {
-							result = result * float64(variable.Int)
+						if variable.Primitive.Type == basic_type.DOUBLE {
+							result = result * variable.Primitive.Double
+						} else if variable.Primitive.Type == basic_type.INT {
+							result = result * float64(variable.Primitive.Int)
 						}
 
 					}
@@ -261,10 +267,10 @@ func Arith_Factors_DOUBLE(factors []parser.TermElement, symbol_env *parser.Symbo
 				case lexer.IDENT:
 					{
 						variable := resolve_ident(factor.Factor, symbol_env)
-						if variable.Type == basic_type.DOUBLE {
-							result = result / variable.Double
-						} else if variable.Type == basic_type.INT {
-							result = result / float64(variable.Int)
+						if variable.Primitive.Type == basic_type.DOUBLE {
+							result = result / variable.Primitive.Double
+						} else if variable.Primitive.Type == basic_type.INT {
+							result = result / float64(variable.Primitive.Int)
 						}
 					}
 

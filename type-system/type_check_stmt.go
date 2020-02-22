@@ -2,8 +2,11 @@ package type_system
 
 import (
 	"fmt"
+	"github.com/KazumaTakata/regex_virtualmachine"
+	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/parser"
-	"github.com/KazumaTakata/static-typed-language/type"
+	basic_type "github.com/KazumaTakata/static-typed-language/type"
+	"io/ioutil"
 	"os"
 )
 
@@ -148,6 +151,23 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 
 	case parser.IMPORT_STMT:
 		{
+
+			regex_string := lexer.Get_Regex_String()
+
+			regex := regex.NewRegexWithParser(regex_string)
+
+			module_symbol_env := parser.Symbol_Env{Table: parser.Symbol_Table{}}
+
+			dat, _ := ioutil.ReadFile(stmt.Import.Module_name + ".cat")
+			string_input := string(dat)
+
+			tokens := lexer.GetTokens(regex, string_input)
+			parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
+			stmts := parser.Parse_Stmts(&parser_input)
+
+			Type_Check_Stmts(stmts, &module_symbol_env)
+
+			symbol_env.Table[stmt.Import.Module_name] = parser.Object{Type: parser.EnvType, Env: &module_symbol_env}
 
 		}
 	case parser.ASSIGN_STMT:

@@ -2,8 +2,12 @@ package eval
 
 import (
 	"fmt"
+	"github.com/KazumaTakata/regex_virtualmachine"
+	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/parser"
 	basic_type "github.com/KazumaTakata/static-typed-language/type"
+	"github.com/KazumaTakata/static-typed-language/type-system"
+	"io/ioutil"
 )
 
 func Eval_Stmts(stmts []parser.Stmt, symbol_env *parser.Symbol_Env) {
@@ -92,15 +96,8 @@ func Calc_Arith(expr *parser.Arith_expr, symbol_env *parser.Symbol_Env) parser.O
 
 	case basic_type.ARRAY:
 		{
-			factor := expr.Terms[0].Term.Factors[0].Factor
-			object := resolve_variable(factor.Id, symbol_env)
 
-			if object.Type == parser.FunctionType {
-				returned_value := handle_func_call(object, factor, symbol_env)
-				return *returned_value
-
-			}
-			return object
+			return *resolve_ident(expr.Terms[0].Term.Factors[0].Factor, symbol_env)
 		}
 	}
 
@@ -154,6 +151,29 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 
 	case parser.DEF_STMT:
 		{
+
+		}
+
+	case parser.IMPORT_STMT:
+		{
+			regex_string := lexer.Get_Regex_String()
+
+			regex := regex.NewRegexWithParser(regex_string)
+
+			module_symbol_env := parser.Symbol_Env{Table: parser.Symbol_Table{}}
+
+			dat, _ := ioutil.ReadFile(stmt.Import.Module_name + ".cat")
+			string_input := string(dat)
+
+			tokens := lexer.GetTokens(regex, string_input)
+			parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
+			stmts := parser.Parse_Stmts(&parser_input)
+
+			type_system.Type_Check_Stmts(stmts, &module_symbol_env)
+
+			Eval_Stmts(stmts, &module_symbol_env)
+
+			symbol_env.Table[stmt.Import.Module_name] = parser.Object{Type: parser.EnvType, Env: &module_symbol_env}
 
 		}
 	case parser.RETURN_STMT:

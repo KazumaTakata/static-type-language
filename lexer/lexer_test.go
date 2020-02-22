@@ -52,4 +52,8 @@ func TestLexer(t *testing.T) {
 
 	fmt.Printf("%+v\n", tokens)
 
+	tokens = GetTokens(regex, "aaa.bbb")
+
+	fmt.Printf("%+v\n", tokens)
+
 }
