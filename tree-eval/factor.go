@@ -58,12 +58,7 @@ func handle_func_call(object parser.Object, factor parser.Factor, symbol_env *pa
 	for i, arg := range object.Function.Args {
 		if factor.Args[i].Type == lexer.IDENT {
 			param_object := resolve_variable(factor.Args[i].Value, symbol_env)
-			switch param_object.Type {
-			case parser.PrimitiveType:
-				{
-					env.Table[arg.Ident] = param_object
-				}
-			}
+			env.Table[arg.Ident] = param_object
 		} else {
 			env.Table[arg.Ident] = argToObject(factor.Args[i])
 		}

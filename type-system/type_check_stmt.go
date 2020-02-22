@@ -287,12 +287,18 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 
 			for _, arg := range stmt.Def.Args {
 
-				if arg.Type.DataStructType != basic_type.PRIMITIVE {
-					fmt.Printf("def argument should be primitive: got %+v\n", arg.Type.DataStructType)
-					os.Exit(1)
+				switch arg.Type.DataStructType {
+				case basic_type.PRIMITIVE:
+					{
+						primitive := parser.PrimitiveObj{Type: arg.Type.Primitive.Type}
+						Child_env.Table[arg.Ident] = parser.Object{Type: parser.PrimitiveType, Primitive: &primitive}
+					}
+				case basic_type.ARRAY:
+					{
+						array := parser.ArrayObj{ElementType: arg.Type.Array.ElementType}
+						Child_env.Table[arg.Ident] = parser.Object{Type: parser.ArrayType, Array: &array}
+					}
 				}
-
-				Child_env.Table[arg.Ident] = parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Type: arg.Type.Primitive.Type}}
 			}
 
 			Child_env.Return_Type = function.Function.Return_type
