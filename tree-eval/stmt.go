@@ -302,7 +302,6 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 					factor := stmt.Expr.Terms[0].Term.Factors[0].Factor
 
 					_ = resolve_ident(factor, symbol_env)
-					//parser.PrintObject(*object)
 
 				}
 

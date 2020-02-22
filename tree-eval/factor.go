@@ -160,18 +160,38 @@ func resolve_ident_with_top_env(factor parser.Factor, symbol_env *parser.Symbol_
 
 	}
 }
-func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.Object {
-	object := resolve_variable(factor.Id, symbol_env)
 
+func handle_builtin_call(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.Object {
+
+	switch factor.Id {
+	case "len":
+		{
+			length := len(resolve_variable(factor.Args[0].Value, symbol_env).Array.Value)
+			return &parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Int: length, Type: basic_type.INT}}
+		}
+
+	}
+
+	return &parser.Object{}
+}
+
+func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.Object {
 	switch factor.FactorType {
 	case parser.FuncCall:
 		{
+
+			if basic_type.Builtin_func(factor.Id) {
+				return handle_builtin_call(factor, symbol_env)
+			}
+
+			object := resolve_variable(factor.Id, symbol_env)
 			returned_value := handle_func_call(object, factor, symbol_env)
 			return returned_value
 
 		}
 	case parser.ArrayMapAccess:
 		{
+			object := resolve_variable(factor.Id, symbol_env)
 			index := Arith_Terms_INT(factor.AccessIndex.Terms, symbol_env)
 			obj := object.Array.Value[index]
 			return obj
@@ -184,6 +204,7 @@ func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.
 
 	default:
 		{
+			object := resolve_variable(factor.Id, symbol_env)
 			return &object
 		}
 

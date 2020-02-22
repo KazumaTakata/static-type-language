@@ -2,9 +2,8 @@
 
 def bubble_sort(arr []int)  {
 
-
-    for var k int = 0; k < 4; k = k + 1 {
-        for var i int = 0; i < 4 - k; i = i + 1 {
+    for var k int = 0; k < len(arr) - 1; k = k + 1 {
+        for var i int = 0; i < len(arr) - 1 - k; i = i + 1 {
             if arr[i] > arr[i + 1] {
                 var tmp int = arr[i]
                 arr[i] = arr[i+1]

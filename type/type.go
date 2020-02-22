@@ -16,6 +16,7 @@ const (
 
 var LexerTypeToType = map[lexer.TokenType]Type{lexer.INT: INT, lexer.DOUBLE: DOUBLE, lexer.STRING: STRING}
 var BoolPrimitiveType Variable_Type = Variable_Type{DataStructType: PRIMITIVE, Primitive: &PrimitiveType{Type: BOOL}}
+var IntPrimitiveType Variable_Type = Variable_Type{DataStructType: PRIMITIVE, Primitive: &PrimitiveType{Type: INT}}
 
 func (e Type) String() string {
 
@@ -109,4 +110,13 @@ type MapType struct {
 
 type PrimitiveType struct {
 	Type Type
+}
+
+func Builtin_func(name string) bool {
+	builtins := map[string]bool{"len": true}
+	if _, ok := builtins[name]; ok {
+		return true
+	}
+
+	return false
 }

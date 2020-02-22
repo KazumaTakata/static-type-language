@@ -150,26 +150,66 @@ func get_Type_of_Factor_with_top_env(factor parser.Factor, symbol_env *parser.Sy
 	return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: basic_type.LexerTypeToType[factor.Type]}}
 }
 
+func len_typecheck(factor parser.Factor, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
+
+	if len(factor.Args) != 1 {
+		fmt.Printf("\nbuiltin func len only accept one argument\n")
+		os.Exit(1)
+	}
+
+	for _, param := range factor.Args {
+		if param.Type == lexer.IDENT {
+			param_object := resolve_name(param.Value, symbol_env)
+			if param_object.Type != parser.ArrayType {
+				fmt.Printf("\nbuiltin func len only accept array type\n")
+				os.Exit(1)
+
+			}
+		}
+
+	}
+	return basic_type.IntPrimitiveType
+}
+
+func type_Check_Builtin(name string, factor parser.Factor, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
+
+	switch name {
+	case "len":
+		{
+			return len_typecheck(factor, symbol_env)
+		}
+	}
+
+	return basic_type.Variable_Type{}
+
+}
+
 func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
 
 	if factor.Type == lexer.IDENT {
-
-		object := resolve_name(factor.Id, symbol_env)
-
 		switch factor.FactorType {
 
 		case parser.FuncCall:
 			{
+
+				if basic_type.Builtin_func(factor.Id) {
+					return type_Check_Builtin(factor.Id, factor, symbol_env)
+				}
+				object := resolve_name(factor.Id, symbol_env)
+
 				return get_Type_of_Factor_FuncCall(object, factor, symbol_env)
 			}
 		case parser.Resolve:
 			{
+
 				module_obj := symbol_env.Table[factor.Id]
 				return get_Type_of_Factor_with_top_env(*factor.Factor, module_obj.Env, symbol_env)
 			}
 
 		case parser.ArrayMapAccess:
 			{
+
+				object := resolve_name(factor.Id, symbol_env)
 
 				index_type := Type_Check_Arith(factor.AccessIndex, symbol_env)
 				if index_type.DataStructType != basic_type.PRIMITIVE {
@@ -188,6 +228,9 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 			}
 		default:
 			{
+
+				object := resolve_name(factor.Id, symbol_env)
+
 				switch object.Type {
 				case parser.ArrayType:
 					{
