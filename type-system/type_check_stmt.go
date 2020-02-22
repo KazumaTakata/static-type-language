@@ -103,14 +103,20 @@ func type_Check_Assign(assign *parser.Assign_stmt, symbol_env *parser.Symbol_Env
 					os.Exit(1)
 				}
 			}
+			if len(assign.Indexs) > 0 {
+				number_of_nest := len(assign.Indexs)
+				arrayelementtype := get_Array_Element_Type(number_of_nest, *object.Array)
 
-			number_of_nest := len(assign.Indexs)
-			arrayelementtype := get_Array_Element_Type(number_of_nest, *object.Array)
+				if !basic_type.Variable_Equal(arrayelementtype, variable_type) {
+					fmt.Printf("\nassignment type mismatch %+v:%+v\n", variable_type, arrayelementtype)
+					os.Exit(1)
 
-			if !basic_type.Variable_Equal(arrayelementtype, variable_type) {
-				fmt.Printf("\nassignment type mismatch %+v:%+v\n", variable_type, arrayelementtype)
-				os.Exit(1)
-
+				}
+			} else {
+				if !basic_type.Variable_Equal(basic_type.WrapWithArrayType(object.Array.ElementType), variable_type) {
+					fmt.Printf("\nassignment type mismatch %+v:%+v\n", basic_type.WrapWithArrayType(object.Array.ElementType), variable_type)
+					os.Exit(1)
+				}
 			}
 
 		}
@@ -140,76 +146,18 @@ func Type_Check_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) {
 
 		}
 
+	case parser.IMPORT_STMT:
+		{
+
+		}
 	case parser.ASSIGN_STMT:
 		{
 			type_Check_Assign(stmt.Assign, symbol_env)
-			/*         variable_type := Type_Check_Assign(stmt.Assign.Assign, symbol_env)*/
-			//object := resolve_name(stmt.Assign.Id, symbol_env)
-
-			//switch object.Type {
-			//case parser.ArrayType:
-			//{
-
-			//for i, _ := range stmt.Assign.Indexs {
-			//index_type := Type_Check_Arith(&stmt.Assign.Indexs[i], symbol_env)
-			//if index_type.Primitive.Type != basic_type.INT {
-			//fmt.Printf("index type not int")
-			//os.Exit(1)
-			//}
-			//}
-
-			//number_of_nest := len(stmt.Assign.Indexs)
-			//arrayelementtype := get_Array_Element_Type(number_of_nest, *object.Array)
-
-			//if !basic_type.Variable_Equal(arrayelementtype, variable_type) {
-			//fmt.Printf("\nassignment type mismatch %+v:%+v\n", variable_type, arrayelementtype)
-			//os.Exit(1)
-
-			//}
-
-			//}
-			//case parser.PrimitiveType:
-			//{
-
-			//if variable_type.DataStructType != basic_type.PRIMITIVE {
-			//fmt.Printf("data structure mismatch not primitive\n")
-			//os.Exit(1)
-			//}
-
-			//if object.Primitive.Type != variable_type.Primitive.Type {
-			//fmt.Printf("primitive value can not assigned to %+v  varieble\n", object.Type)
-			//os.Exit(1)
-			//}
-			//}
-
-			/*}*/
 		}
 
 	case parser.DECL_STMT:
 		{
 			type_Check_Decl(stmt.Decl, symbol_env)
-			/*         var_type := stmt.Decl.Type*/
-			//assign_type := Type_Check_Assign(stmt.Decl.Assign, symbol_env)
-
-			//if var_type.DataStructType != assign_type.DataStructType {
-			//fmt.Printf("data structure mismatch %+v: %+v\n", var_type.DataStructType, assign_type.DataStructType)
-			//os.Exit(1)
-
-			//}
-
-			//switch var_type.DataStructType {
-			//case basic_type.PRIMITIVE:
-			//{
-			//primitive := parser.PrimitiveObj{Type: var_type.Primitive.Type}
-			//symbol_env.Table[stmt.Decl.Id] = parser.Object{Type: parser.PrimitiveType, Primitive: &primitive}
-			//}
-			//case basic_type.ARRAY:
-			//{
-			//array := parser.ArrayObj{ElementType: var_type.Array.ElementType}
-			//symbol_env.Table[stmt.Decl.Id] = parser.Object{Type: parser.ArrayType, Array: &array}
-			//}
-
-			//}
 
 		}
 	case parser.FOR_STMT:

@@ -13,6 +13,7 @@ const (
 	PrimitiveType ObjectType = iota + 1
 	FunctionType
 	ArrayType
+	EnvType
 )
 
 func (e ObjectType) String() string {
@@ -24,6 +25,8 @@ func (e ObjectType) String() string {
 		return "Function"
 	case ArrayType:
 		return "Array"
+	case EnvType:
+		return "Env"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -35,6 +38,7 @@ type Object struct {
 	Primitive *PrimitiveObj
 	Function  *Def_stmt
 	Array     *ArrayObj
+	Env       *Symbol_Env
 }
 
 type ArrayObj struct {

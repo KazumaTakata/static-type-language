@@ -41,6 +41,7 @@ func Get_Regex_String() string {
 	lexer_rules = append(lexer_rules, []string{"BOOL", "true|false"})
 	lexer_rules = append(lexer_rules, []string{"MAP", "map"})
 	lexer_rules = append(lexer_rules, []string{"NEW", "new"})
+	lexer_rules = append(lexer_rules, []string{"IMPORT", "import"})
 
 	//type
 	lexer_rules = append(lexer_rules, []string{"DECL_TYPE", "int|double|string|bool"})
@@ -98,6 +99,7 @@ const (
 	MAP
 	NEW
 	SEMICOLON
+	IMPORT
 )
 
 func (e TokenType) String() string {
@@ -169,6 +171,8 @@ func (e TokenType) String() string {
 		return "NEW"
 	case SEMICOLON:
 		return "SEMICOLON"
+	case IMPORT:
+		return "IMPORT"
 
 	default:
 		return fmt.Sprintf("%d", int(e))
@@ -209,6 +213,7 @@ var tokenmap map[string]TokenType = map[string]TokenType{
 	"MAP":       MAP,
 	"NEW":       NEW,
 	"SEMICOLON": SEMICOLON,
+	"IMPORT":    IMPORT,
 }
 
 type Token struct {

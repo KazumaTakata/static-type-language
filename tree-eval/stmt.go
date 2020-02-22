@@ -266,13 +266,26 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 				}
 			case basic_type.ARRAY:
 				{
-					object := resolve_variable(stmt.Expr.Terms[0].Term.Factors[0].Factor.Id, symbol_env)
-					parser.PrintObject(object)
-				}
-			}
+					factor := stmt.Expr.Terms[0].Term.Factors[0].Factor
 
+					switch factor.FactorType {
+					case parser.FuncCall:
+						{
+							object := resolve_variable(factor.Id, symbol_env)
+							handle_func_call(object, factor, symbol_env)
+						}
+
+					case parser.Primitive:
+						{
+							object := resolve_variable(factor.Id, symbol_env)
+							parser.PrintObject(object)
+						}
+
+					}
+				}
+
+			}
 		}
 	}
-
 	return false
 }

@@ -16,6 +16,7 @@ const (
 	EXPR
 	RETURN_STMT
 	ASSIGN_STMT
+	IMPORT_STMT
 )
 
 func (e Stmt_Type) String() string {
@@ -35,6 +36,9 @@ func (e Stmt_Type) String() string {
 		return "RETURN_STMT"
 	case ASSIGN_STMT:
 		return "ASSIGN_STMT"
+	case IMPORT_STMT:
+		return "IMPORT_STMT"
+
 	default:
 		return fmt.Sprintf("%d", int(e))
 	}
@@ -117,6 +121,10 @@ type If_stmt struct {
 	Stmts      []Stmt
 }
 
+type Import_stmt struct {
+	Module_name string
+}
+
 type Return_stmt struct {
 	Type     basic_type.Variable_Type
 	Cmp_expr Cmp_expr
@@ -131,6 +139,7 @@ type Stmt struct {
 	Def    *Def_stmt
 	Return *Return_stmt
 	Assign *Assign_stmt
+	Import *Import_stmt
 }
 type Func_param struct {
 	Ident string
@@ -319,6 +328,16 @@ func Parse_Stmt(tokens *Parser_Input) Stmt {
 				stmt.Decl = &decl_stmt
 				stmt.Type = DECL_STMT
 
+			}
+		case lexer.IMPORT:
+			{
+				tokens.eat(lexer.IMPORT)
+				module_name := tokens.assert_next(lexer.IDENT)
+
+				import_stmt := Import_stmt{Module_name: module_name.Value}
+
+				stmt.Import = &import_stmt
+				stmt.Type = IMPORT_STMT
 			}
 		case lexer.IDENT:
 			{
