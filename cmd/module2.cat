@@ -3,7 +3,7 @@ import bubble_sort
 var y []int = []int{0, 13, 10, 3, 0}
 
 
-var x []int = bubble_sort.bubble_sort(y)
+bubble_sort.bubble_sort(y)
 
 
-x
+y

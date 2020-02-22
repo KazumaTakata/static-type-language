@@ -1,7 +1,6 @@
 
-var y []int = []int{2, 13, 10, 3, 0}
 
-def bubble_sort(arr []int) []int {
+def bubble_sort(arr []int)  {
 
 
     for var k int = 0; k < 4; k = k + 1 {
@@ -13,7 +12,7 @@ def bubble_sort(arr []int) []int {
            }
        }  
     }
+
     
-    return arr
 }
 
