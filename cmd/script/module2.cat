@@ -1,9 +1,10 @@
 import bubble_sort 
 
-var y []int = []int{0, 13, 10, 3, 0}
+var y []int = []int{0, 13, 10, 3, 0, 202, 1000, 22, 23, 332, 11, 3}
 
 
+var cur_time int = time() 
 bubble_sort.bubble_sort(y)
+var diff int = time() - cur_time
 
-
-y
+diff / 1000

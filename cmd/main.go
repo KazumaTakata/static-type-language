@@ -56,6 +56,7 @@ func main() {
 	argsWithoutProg := os.Args[1:]
 
 	if len(argsWithoutProg) > 0 {
+
 		dat, _ := ioutil.ReadFile(argsWithoutProg[0])
 		fmt.Printf("%s", dat)
 

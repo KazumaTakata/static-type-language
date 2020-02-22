@@ -113,7 +113,7 @@ type PrimitiveType struct {
 }
 
 func Builtin_func(name string) bool {
-	builtins := map[string]bool{"len": true}
+	builtins := map[string]bool{"len": true, "time": true, "print": true}
 	if _, ok := builtins[name]; ok {
 		return true
 	}

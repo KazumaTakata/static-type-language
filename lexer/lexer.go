@@ -13,7 +13,7 @@ func Get_Regex_String() string {
 	lexer_rules := [][]string{}
 	lexer_rules = append(lexer_rules, []string{"DOUBLE", "\\d+\\.\\d*"})
 	lexer_rules = append(lexer_rules, []string{"INT", "\\d+"})
-	lexer_rules = append(lexer_rules, []string{"STRING", "\"\\w*\""})
+	lexer_rules = append(lexer_rules, []string{"STRING", "\"[a-zA-Z_ \t0-9]*\""})
 	lexer_rules = append(lexer_rules, []string{"ADD", "\\+"})
 	lexer_rules = append(lexer_rules, []string{"SUB", "\\-"})
 	lexer_rules = append(lexer_rules, []string{"MUL", "\\*"})

@@ -5,6 +5,7 @@ import (
 	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/parser"
 	"strconv"
+	"time"
 
 	basic_type "github.com/KazumaTakata/static-typed-language/type"
 	"os"
@@ -168,6 +169,21 @@ func handle_builtin_call(factor parser.Factor, symbol_env *parser.Symbol_Env) *p
 		{
 			length := len(resolve_variable(factor.Args[0].Value, symbol_env).Array.Value)
 			return &parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Int: length, Type: basic_type.INT}}
+		}
+	case "time":
+		{
+			cur_time := int(time.Now().UnixNano())
+			return &parser.Object{Type: parser.PrimitiveType, Primitive: &parser.PrimitiveObj{Int: cur_time, Type: basic_type.INT}}
+		}
+	case "print":
+		{
+			if factor.Args[0].Type == lexer.IDENT {
+				object := resolve_variable(factor.Args[0].Value, symbol_env)
+				fmt.Printf(object.Primitive.String)
+
+			} else {
+				fmt.Printf(factor.Args[0].Value)
+			}
 		}
 
 	}

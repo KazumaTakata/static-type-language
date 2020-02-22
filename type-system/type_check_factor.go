@@ -6,6 +6,7 @@ import (
 	"github.com/KazumaTakata/static-typed-language/parser"
 	"github.com/KazumaTakata/static-typed-language/type"
 	"os"
+	"runtime/debug"
 )
 
 func resolve_name_pointer(id string, symbol_env *parser.Symbol_Env) *parser.Object {
@@ -32,6 +33,7 @@ func resolve_name(id string, symbol_env *parser.Symbol_Env) parser.Object {
 			return resolve_name(id, symbol_env.Parent_Env)
 		}
 
+		debug.PrintStack()
 		fmt.Printf("\nnot defined variable %v\n", id)
 		os.Exit(1)
 
@@ -148,40 +150,6 @@ func get_Type_of_Factor_with_top_env(factor parser.Factor, symbol_env *parser.Sy
 	}
 
 	return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: basic_type.LexerTypeToType[factor.Type]}}
-}
-
-func len_typecheck(factor parser.Factor, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
-
-	if len(factor.Args) != 1 {
-		fmt.Printf("\nbuiltin func len only accept one argument\n")
-		os.Exit(1)
-	}
-
-	for _, param := range factor.Args {
-		if param.Type == lexer.IDENT {
-			param_object := resolve_name(param.Value, symbol_env)
-			if param_object.Type != parser.ArrayType {
-				fmt.Printf("\nbuiltin func len only accept array type\n")
-				os.Exit(1)
-
-			}
-		}
-
-	}
-	return basic_type.IntPrimitiveType
-}
-
-func type_Check_Builtin(name string, factor parser.Factor, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
-
-	switch name {
-	case "len":
-		{
-			return len_typecheck(factor, symbol_env)
-		}
-	}
-
-	return basic_type.Variable_Type{}
-
 }
 
 func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
