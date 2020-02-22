@@ -40,6 +40,116 @@ func resolve_name(id string, symbol_env *parser.Symbol_Env) parser.Object {
 	return parser.Object{}
 }
 
+func get_Type_of_Factor_FuncCall(object parser.Object, factor parser.Factor, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
+
+	if object.Type != parser.FunctionType {
+		fmt.Printf("\nvariable %s is not function\n", factor.Id)
+		os.Exit(1)
+	}
+	params := factor.Args
+	function := object.Function
+
+	for i, arg := range function.Args {
+		param := params[i]
+		if param.Type == lexer.IDENT {
+			param_object := resolve_name(param.Value, symbol_env)
+			switch param_object.Type {
+			case parser.PrimitiveType:
+				{
+					if basic_type.PRIMITIVE != arg.Type.DataStructType {
+						fmt.Printf("\nparam type mismatch:argument type  %+v is not primitive\n", arg.Type.DataStructType)
+						os.Exit(1)
+					}
+
+					if arg.Type.Primitive.Type != param_object.Primitive.Type {
+						fmt.Printf("\nparam type mismatch:argument type  %+v is not %+v\n", arg.Type.Primitive.Type, param_object.Primitive.Type)
+						os.Exit(1)
+
+					}
+
+				}
+
+			case parser.ArrayType:
+				{
+
+				}
+			}
+
+		} else {
+			if arg.Type.DataStructType != basic_type.PRIMITIVE {
+				fmt.Printf("\nparam type mismatch: %v is not primitive type \n", arg.Type)
+				os.Exit(1)
+			}
+
+			if arg.Type.Primitive.Type != basic_type.LexerTypeToType[params[i].Type] {
+				fmt.Printf("\nparam type mismatch: %v can not be passed as type %v\n", param.Type, arg.Type)
+				os.Exit(1)
+			}
+		}
+
+	}
+	return function.Return_type
+
+}
+
+func get_Type_of_Factor_with_top_env(factor parser.Factor, symbol_env *parser.Symbol_Env, top_env *parser.Symbol_Env) basic_type.Variable_Type {
+
+	if factor.Type == lexer.IDENT {
+
+		object := resolve_name(factor.Id, symbol_env)
+
+		switch factor.FactorType {
+
+		case parser.FuncCall:
+			{
+				return get_Type_of_Factor_FuncCall(object, factor, top_env)
+			}
+		case parser.Resolve:
+			{
+				module_obj := symbol_env.Table[factor.Id]
+				return get_Type_of_Factor_with_top_env(*factor.Factor, module_obj.Env, symbol_env)
+			}
+
+		case parser.ArrayMapAccess:
+			{
+
+				index_type := Type_Check_Arith(factor.AccessIndex, top_env)
+				if index_type.DataStructType != basic_type.PRIMITIVE {
+					fmt.Printf("\nparam type mismatch: %v is not primitive type \n", index_type.DataStructType)
+					os.Exit(1)
+				}
+
+				if index_type.Primitive.Type != basic_type.INT {
+					fmt.Printf("\narray index type should be int type: got %+v\n", index_type)
+					os.Exit(1)
+				}
+
+				if object.Type == parser.ArrayType {
+					return object.Array.ElementType
+				}
+			}
+		default:
+			{
+				switch object.Type {
+				case parser.ArrayType:
+					{
+						return basic_type.Variable_Type{DataStructType: basic_type.ARRAY, Array: &basic_type.ArrayType{ElementType: object.Array.ElementType}}
+					}
+				case parser.PrimitiveType:
+					{
+						return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: object.Primitive.Type}}
+
+					}
+
+				}
+
+			}
+		}
+	}
+
+	return basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: basic_type.LexerTypeToType[factor.Type]}}
+}
+
 func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
 
 	if factor.Type == lexer.IDENT {
@@ -50,58 +160,12 @@ func get_Type_of_Factor(factor parser.Factor, symbol_env *parser.Symbol_Env) bas
 
 		case parser.FuncCall:
 			{
-				if object.Type != parser.FunctionType {
-					fmt.Printf("\nvariable %s is not function\n", factor.Id)
-					os.Exit(1)
-				}
-				params := factor.Args
-				function := object.Function
-
-				for i, arg := range function.Args {
-					param := params[i]
-					if param.Type == lexer.IDENT {
-						param_object := resolve_name(param.Value, symbol_env)
-						switch param_object.Type {
-						case parser.PrimitiveType:
-							{
-								if basic_type.PRIMITIVE != arg.Type.DataStructType {
-									fmt.Printf("\nparam type mismatch:argument type  %+v is not primitive\n", arg.Type.DataStructType)
-									os.Exit(1)
-								}
-
-								if arg.Type.Primitive.Type != param_object.Primitive.Type {
-									fmt.Printf("\nparam type mismatch:argument type  %+v is not %+v\n", arg.Type.Primitive.Type, param_object.Primitive.Type)
-									os.Exit(1)
-
-								}
-
-							}
-
-						case parser.ArrayType:
-							{
-
-							}
-						}
-
-					} else {
-						if arg.Type.DataStructType != basic_type.PRIMITIVE {
-							fmt.Printf("\nparam type mismatch: %v is not primitive type \n", arg.Type)
-							os.Exit(1)
-						}
-
-						if arg.Type.Primitive.Type != basic_type.LexerTypeToType[params[i].Type] {
-							fmt.Printf("\nparam type mismatch: %v can not be passed as type %v\n", param.Type, arg.Type)
-							os.Exit(1)
-						}
-					}
-
-				}
-				return function.Return_type
+				return get_Type_of_Factor_FuncCall(object, factor, symbol_env)
 			}
 		case parser.Resolve:
 			{
 				module_obj := symbol_env.Table[factor.Id]
-				return get_Type_of_Factor(*factor.Factor, module_obj.Env)
+				return get_Type_of_Factor_with_top_env(*factor.Factor, module_obj.Env, symbol_env)
 			}
 
 		case parser.ArrayMapAccess:

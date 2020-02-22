@@ -99,6 +99,11 @@ func Calc_Arith(expr *parser.Arith_expr, symbol_env *parser.Symbol_Env) parser.O
 
 			return *resolve_ident(expr.Terms[0].Term.Factors[0].Factor, symbol_env)
 		}
+
+	default:
+		{
+			return *resolve_ident(expr.Terms[0].Term.Factors[0].Factor, symbol_env)
+		}
 	}
 
 	return parser.Object{}
@@ -288,20 +293,17 @@ func Eval_Stmt(stmt parser.Stmt, symbol_env *parser.Symbol_Env) bool {
 				{
 					factor := stmt.Expr.Terms[0].Term.Factors[0].Factor
 
-					switch factor.FactorType {
-					case parser.FuncCall:
-						{
-							object := resolve_variable(factor.Id, symbol_env)
-							handle_func_call(object, factor, symbol_env)
-						}
+					object := resolve_ident(factor, symbol_env)
+					parser.PrintObject(*object)
 
-					case parser.Primitive:
-						{
-							object := resolve_variable(factor.Id, symbol_env)
-							parser.PrintObject(object)
-						}
+				}
+			default:
+				{
+					factor := stmt.Expr.Terms[0].Term.Factors[0].Factor
 
-					}
+					_ = resolve_ident(factor, symbol_env)
+					//parser.PrintObject(*object)
+
 				}
 
 			}
