@@ -1,0 +1,15 @@
+
+
+def gen_arr(x []int) []int {
+   x[0] = 100 
+   return x 
+}
+
+var z []int = []int{3,3}
+
+
+var y []int = gen_arr(z) 
+
+y
+
+
