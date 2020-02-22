@@ -131,6 +131,35 @@ func Arith_Factors_INT(factors []parser.TermElement, symbol_env *parser.Symbol_E
 	return result
 }
 
+func resolve_ident_with_top_env(factor parser.Factor, symbol_env *parser.Symbol_Env, top_env *parser.Symbol_Env) *parser.Object {
+	object := resolve_variable(factor.Id, symbol_env)
+
+	switch factor.FactorType {
+	case parser.FuncCall:
+		{
+			returned_value := handle_func_call(object, factor, top_env)
+			return returned_value
+
+		}
+	case parser.ArrayMapAccess:
+		{
+			index := Arith_Terms_INT(factor.AccessIndex.Terms, top_env)
+			obj := object.Array.Value[index]
+			return obj
+		}
+	case parser.Resolve:
+		{
+			module_env := symbol_env.Table[factor.Id]
+			return resolve_ident_with_top_env(*factor.Factor, module_env.Env, symbol_env)
+		}
+
+	default:
+		{
+			return &object
+		}
+
+	}
+}
 func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.Object {
 	object := resolve_variable(factor.Id, symbol_env)
 
@@ -150,7 +179,7 @@ func resolve_ident(factor parser.Factor, symbol_env *parser.Symbol_Env) *parser.
 	case parser.Resolve:
 		{
 			module_env := symbol_env.Table[factor.Id]
-			return resolve_ident(*factor.Factor, module_env.Env)
+			return resolve_ident_with_top_env(*factor.Factor, module_env.Env, symbol_env)
 		}
 
 	default:
