@@ -29,28 +29,45 @@ func Type_Check_Cmp(cmp_expr *parser.Cmp_expr, symbol_env *parser.Symbol_Env) ba
 	if cmp_expr.Right != nil {
 		right_type := Type_Check_Arith(cmp_expr.Right, symbol_env)
 
-		if left_type.DataStructType != basic_type.PRIMITIVE {
-			fmt.Printf("\ntype mismatch: type should be primitive %+v\n", left_type)
+		if !basic_type.Variable_Primitive_Equal(left_type, right_type) {
+			fmt.Printf("\ncmp operand should be primitive and have same type: got: (%+v : %+v)\n", left_type, right_type)
 			os.Exit(1)
-
 		}
 
-		if right_type.DataStructType != basic_type.PRIMITIVE {
-			fmt.Printf("\ntype mismatch: type should be primitive %+v\n", left_type)
-			os.Exit(1)
+		cmp_expr.Type = basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: basic_type.BOOL}}
+		return cmp_expr.Type
 
-		}
+	} else {
 
-		if left_type.Primitive.Type != right_type.Primitive.Type {
-			fmt.Printf("\ntype mismatch: %v can not be %ved with %v\n", left_type, cmp_expr.Op, right_type)
-			os.Exit(1)
-		} else {
-			cmp_expr.Type = basic_type.Variable_Type{DataStructType: basic_type.PRIMITIVE, Primitive: &basic_type.PrimitiveType{Type: basic_type.BOOL}}
-			return cmp_expr.Type
-		}
+		cmp_expr.Type = left_type
+		return cmp_expr.Type
+
+	}
+}
+
+func Type_Check_Logic(logic_expr *parser.Logic_expr, symbol_env *parser.Symbol_Env) basic_type.Variable_Type {
+
+	if len(logic_expr.Cmps) == 1 {
+		cmp_type := Type_Check_Cmp(&logic_expr.Cmps[0], symbol_env)
+		logic_expr.Cmps[0].Type = cmp_type
 	}
 
-	cmp_expr.Type = left_type
+	var operand_variable_type basic_type.Variable_Type
 
-	return cmp_expr.Type
+	for i, cmp := range logic_expr.Cmps {
+		operand_variable_type = Type_Check_Cmp(&cmp, symbol_env)
+
+		if !basic_type.Variable_Equal(operand_variable_type, basic_type.BoolPrimitiveType) {
+			fmt.Printf("\nlogic operand should be boolean type: got %+v.\n", operand_variable_type)
+			os.Exit(1)
+		}
+
+		logic_expr.Cmps[i].Type = operand_variable_type
+
+	}
+
+	logic_expr.Type = basic_type.BoolPrimitiveType
+
+	return basic_type.BoolPrimitiveType
+
 }

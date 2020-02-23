@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//	"fmt"
 	"github.com/KazumaTakata/readline"
 	"github.com/KazumaTakata/regex_virtualmachine"
 	"github.com/KazumaTakata/static-typed-language/lexer"
@@ -58,7 +58,7 @@ func main() {
 	if len(argsWithoutProg) > 0 {
 
 		dat, _ := ioutil.ReadFile(argsWithoutProg[0])
-		fmt.Printf("%s", dat)
+		//fmt.Printf("%s", dat)
 
 		run_program(dat)
 

@@ -57,6 +57,15 @@ func (e DataStructType) String() string {
 	}
 }
 
+func Variable_Primitive_Equal(var1 Variable_Type, var2 Variable_Type) bool {
+
+	if var1.DataStructType != PRIMITIVE {
+		return false
+	}
+
+	return Variable_Equal(var1, var2)
+}
+
 func Variable_Equal(var1 Variable_Type, var2 Variable_Type) bool {
 
 	if var1.DataStructType != var2.DataStructType {
@@ -113,7 +122,7 @@ type PrimitiveType struct {
 }
 
 func Builtin_func(name string) bool {
-	builtins := map[string]bool{"len": true, "time": true, "print": true}
+	builtins := map[string]bool{"len": true, "time": true, "print": true, "string": true}
 	if _, ok := builtins[name]; ok {
 		return true
 	}

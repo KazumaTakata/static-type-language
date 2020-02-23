@@ -7,35 +7,6 @@ import (
 	"github.com/KazumaTakata/static-typed-language/type"
 )
 
-type ArithOp int
-
-const (
-	EQUAL ArithOp = iota + 1
-	NOTEQUAL
-	GT
-	LT
-	ANONE
-)
-
-func (e ArithOp) String() string {
-
-	switch e {
-	case EQUAL:
-		return "EQUAL"
-	case NOTEQUAL:
-		return "NOTEQUAL"
-	case GT:
-		return "GT"
-	case LT:
-		return "LT"
-	case ANONE:
-		return "ANONE"
-
-	default:
-		return fmt.Sprintf("%d", int(e))
-	}
-}
-
 type FactorOp int
 
 const (
@@ -82,13 +53,6 @@ func (e TermOp) String() string {
 	}
 }
 
-type Cmp_expr struct {
-	Left  *Arith_expr
-	Right *Arith_expr
-	Op    ArithOp
-	Type  basic_type.Variable_Type
-}
-
 type Arith_expr struct {
 	Terms []ArithElement
 	Type  basic_type.Variable_Type
@@ -110,27 +74,6 @@ type TermElement struct {
 }
 
 var tokenToArithOp = map[lexer.TokenType]ArithOp{lexer.EQUAL: EQUAL, lexer.NOTEQUAL: NOTEQUAL, lexer.GT: GT, lexer.LT: LT}
-
-func Parse_Cmp_expr(tokens *Parser_Input) Cmp_expr {
-
-	cmp_expr := Cmp_expr{}
-	arith := Parse_Arith_expr(tokens)
-	cmp_expr.Left = &arith
-
-	if !tokens.empty() && (tokens.peek().Type == lexer.EQUAL || tokens.peek().Type == lexer.NOTEQUAL || tokens.peek().Type == lexer.GT || tokens.peek().Type == lexer.LT) {
-		op := tokens.next()
-		aop := tokenToArithOp[op.Type]
-		arith := Parse_Arith_expr(tokens)
-		cmp_expr.Right = &arith
-		cmp_expr.Op = aop
-	}
-
-	if !tokens.empty() && tokens.peek().Type == lexer.NEWLINE {
-		tokens.eat(lexer.NEWLINE)
-	}
-
-	return cmp_expr
-}
 
 func Parse_Arith_expr(tokens *Parser_Input) Arith_expr {
 

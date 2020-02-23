@@ -11,7 +11,16 @@ def bubble_sort(arr []int)  {
            }
        }  
     }
+}
 
-    
+def insertion_sort(arr []int) {
+
+    for var i int = 0; i< len(arr) ; i = i + 1 {
+
+        var tmp int = arr[i]
+        var j int = i
+
+        for 
+    }
 }
 

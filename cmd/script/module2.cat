@@ -7,4 +7,5 @@ var cur_time int = time()
 bubble_sort.bubble_sort(y)
 var diff int = time() - cur_time
 
+print("elapsed time is ")
 diff / 1000
