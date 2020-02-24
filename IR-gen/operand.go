@@ -1,10 +1,15 @@
-package main
+package ir_gen
 
 import (
 	"fmt"
+	"github.com/KazumaTakata/static-typed-language/parser"
+	"strconv"
 )
 
 type Operator int
+
+var factorOpToOp = map[parser.FactorOp]Operator{parser.MUL: MUL, parser.DIV: DIV}
+var termOpToOp = map[parser.TermOp]Operator{parser.ADD: ADD, parser.SUB: SUB}
 
 const (
 	ADD Operator = iota + 1
@@ -26,7 +31,7 @@ func (e Operator) String() string {
 	case DIV:
 		return "/"
 	case NONE:
-		return "NONE"
+		return ""
 	default:
 		return fmt.Sprintf("%d", int(e))
 	}
@@ -65,4 +70,29 @@ type Operand struct {
 	Bool   bool
 	Type   OperandType
 	IfTmp  bool
+}
+
+func (Op *Operand) Str() string {
+
+	switch Op.Type {
+	case Ident:
+		{
+			return Op.Id
+		}
+	case String:
+		{
+			return Op.String
+		}
+	case Int:
+		{
+			return strconv.Itoa(Op.Int)
+		}
+	case Float:
+		{
+			return fmt.Sprintf("%f", Op.Float)
+		}
+
+	}
+
+	return ""
 }

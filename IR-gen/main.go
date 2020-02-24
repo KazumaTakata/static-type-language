@@ -1,13 +1,7 @@
-package main
+package ir_gen
 
 import (
-	"github.com/KazumaTakata/regex_virtualmachine"
-	"github.com/KazumaTakata/static-typed-language/lexer"
 	"github.com/KazumaTakata/static-typed-language/parser"
-	"github.com/KazumaTakata/static-typed-language/tree-eval"
-	"github.com/KazumaTakata/static-typed-language/type-system"
-	"io/ioutil"
-	"os"
 )
 
 func Gen_IR_Stmts(stmts []parser.Stmt, symbol_env *parser.Symbol_Env) {
@@ -45,44 +39,67 @@ func Gen_IR_Assign(assign parser.Assign, symbol_env *parser.Symbol_Env) {
 
 }
 
-func Gen_IR_Expr(cmp parser.Cmp_expr, symbol_env *parser.Symbol_Env) {
-	Gen_IR_Arith(cmp.Left, symbol_env)
+func Gen_IR_Expr(cmp parser.Cmp_expr) {
 }
 
-func Gen_IR_Arith(arith parser.Arith_expr, symbol_env *parser.Symbol_Env) {
+func Gen_IR_Arith(arith parser.Arith_expr) ([]IR_Code, Operand) {
 
-	Gen_IR_Term(arith.Terms[0].Term, symbol_env)
+	if len(arith.Terms) == 1 {
+		codes, operand := Gen_IR_Term(arith.Terms[0].Term)
+		return codes, operand
+	}
+
+	codes := []IR_Code{}
+	code := IR_Code{}
+
+	var operand1 Operand
+
+	for i, term := range arith.Terms {
+		if i == 0 {
+			code, operand := Gen_IR_Term(term.Term)
+			operand1 = operand
+			codes = append(codes, code...)
+			continue
+		}
+		term_code, operand2 := Gen_IR_Term(term.Term)
+
+		codes = append(codes, term_code...)
+
+		code, operand1 = Gen_IR_Binary(operand1, operand2, termOpToOp[term.Op])
+		codes = append(codes, code)
+	}
+
+	return codes, operand1
 
 }
+func Gen_IR_Term(term parser.Term) ([]IR_Code, Operand) {
 
-func Gen_IR_Term(term parser.Term, symbol_env *parser.Symbol_Env) {
-	term.Factors[0].Factor
-}
+	if len(term.Factors) == 1 {
+		code, operand := Gen_IR_Base(term.Factors[0].Factor)
+		return []IR_Code{code}, operand
 
-func run_program(input []byte) {
-	regex_string := lexer.Get_Regex_String()
+	}
 
-	regex := regex.NewRegexWithParser(regex_string)
+	codes := []IR_Code{}
+	code := IR_Code{}
 
-	symbol_env := parser.Symbol_Env{Table: parser.Symbol_Table{}}
+	var operand1 Operand
+	var operand2 Operand
 
-	string_input := string(input)
-	tokens := lexer.GetTokens(regex, string_input)
-	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
-	stmt := parser.Parse_Stmts(&parser_input)
+	for i, factor := range term.Factors {
+		if i == 0 {
+			code, operand := Gen_IR_Base(factor.Factor)
+			operand1 = operand
+			codes = append(codes, code)
+			continue
+		}
+		code, operand2 = Gen_IR_Base(factor.Factor)
+		codes = append(codes, code)
 
-	type_system.Type_Check_Stmts(stmt, &symbol_env)
+		code, operand1 = Gen_IR_Binary(operand1, operand2, factorOpToOp[factor.Op])
+		codes = append(codes, code)
+	}
 
-	eval.Eval_Stmts(stmt, &symbol_env)
-
-}
-
-func main() {
-
-	argsWithoutProg := os.Args[1:]
-
-	dat, _ := ioutil.ReadFile(argsWithoutProg[0])
-
-	run_program(dat)
+	return codes, operand1
 
 }
