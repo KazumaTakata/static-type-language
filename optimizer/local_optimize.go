@@ -1,14 +1,18 @@
-package ir_gen
+package optimize
 
-func Get_Available(codes []IR_Code) [][]IR_Code {
+import (
+	"github.com/KazumaTakata/static-typed-language/IR-gen"
+)
 
-	available_exprs := [][]IR_Code{}
+func Get_Available(codes []ir_gen.IR_Code) [][]ir_gen.IR_Code {
 
-	available_exprs = append(available_exprs, []IR_Code{})
+	available_exprs := [][]ir_gen.IR_Code{}
+
+	available_exprs = append(available_exprs, []ir_gen.IR_Code{})
 
 	for _, code := range codes {
 		left := code.Left_Operand
-		new_availables := []IR_Code{}
+		new_availables := []ir_gen.IR_Code{}
 		for _, ir_code := range available_exprs[len(available_exprs)-1] {
 			if left != ir_code.Left_Operand {
 				new_availables = append(new_availables, ir_code)
@@ -20,7 +24,7 @@ func Get_Available(codes []IR_Code) [][]IR_Code {
 	return available_exprs
 }
 
-func Common_Subexpression_Elimination(codes []IR_Code, availables [][]IR_Code) {
+func Common_Subexpression_Elimination(codes []ir_gen.IR_Code, availables [][]ir_gen.IR_Code) {
 
 	for i, code := range codes {
 		if i == 0 {
@@ -29,12 +33,12 @@ func Common_Subexpression_Elimination(codes []IR_Code, availables [][]IR_Code) {
 
 		for _, available := range availables[i] {
 			if available.Right_Operand1 == code.Right_Operand1 {
-				if available.Op == NONE {
+				if available.Op == ir_gen.NONE {
 					codes[i].Right_Operand1 = available.Left_Operand
 				} else {
 					if available.Op == code.Op && available.Right_Operand2 == code.Right_Operand2 {
 						codes[i].Right_Operand1 = available.Left_Operand
-						codes[i].Op = NONE
+						codes[i].Op = ir_gen.NONE
 					}
 				}
 			}
@@ -44,11 +48,11 @@ func Common_Subexpression_Elimination(codes []IR_Code, availables [][]IR_Code) {
 	}
 }
 
-func Copy_Propagation(codes []IR_Code, availables [][]IR_Code) {
+func Copy_Propagation(codes []ir_gen.IR_Code, availables [][]ir_gen.IR_Code) {
 
 	for i, code := range codes {
 		for _, available := range availables[i+1] {
-			if available.Op == NONE {
+			if available.Op == ir_gen.NONE {
 				if available.Left_Operand == code.Right_Operand1 {
 					codes[i].Right_Operand1 = available.Right_Operand1
 				}
@@ -63,20 +67,20 @@ func Copy_Propagation(codes []IR_Code, availables [][]IR_Code) {
 	}
 }
 
-func Dead_Code_Elimination(codes []IR_Code) []IR_Code {
+func Dead_Code_Elimination(codes []ir_gen.IR_Code) []ir_gen.IR_Code {
 
-	eliminated := []IR_Code{}
+	eliminated := []ir_gen.IR_Code{}
 
-	liveness := map[Operand]bool{}
+	liveness := map[ir_gen.Operand]bool{}
 	liveness[codes[len(codes)-1].Left_Operand] = true
 
 	for i := len(codes) - 1; i >= 0; i-- {
 
 		if _, ok := liveness[codes[i].Left_Operand]; ok {
 			delete(liveness, codes[i].Left_Operand)
-			eliminated = append([]IR_Code{codes[i]}, eliminated...)
+			eliminated = append([]ir_gen.IR_Code{codes[i]}, eliminated...)
 			liveness[codes[i].Right_Operand1] = true
-			if codes[i].Op != NONE {
+			if codes[i].Op != ir_gen.NONE {
 				liveness[codes[i].Right_Operand2] = true
 			}
 		}
@@ -84,46 +88,46 @@ func Dead_Code_Elimination(codes []IR_Code) []IR_Code {
 	return eliminated
 }
 
-func Constant_Folding(codes []IR_Code) {
+func Constant_Folding(codes []ir_gen.IR_Code) {
 
 	for i, code := range codes {
-		if code.Right_Operand1.Type != Ident && code.Right_Operand2.Type != Ident {
+		if code.Right_Operand1.Type != ir_gen.Ident && code.Right_Operand2.Type != ir_gen.Ident {
 			switch code.Op {
-			case ADD:
+			case ir_gen.ADD:
 				{
-					if code.Right_Operand1.Type == Int {
-						if code.Right_Operand2.Type == Int {
+					if code.Right_Operand1.Type == ir_gen.Int {
+						if code.Right_Operand2.Type == ir_gen.Int {
 							codes[i].Right_Operand1.Int = code.Right_Operand1.Int + code.Right_Operand2.Int
-						} else if code.Right_Operand2.Type == Float {
+						} else if code.Right_Operand2.Type == ir_gen.Float {
 							codes[i].Right_Operand1.Float = float64(code.Right_Operand1.Int) + code.Right_Operand2.Float
-							codes[i].Right_Operand1.Type = Float
+							codes[i].Right_Operand1.Type = ir_gen.Float
 						}
 					}
 
 				}
-			case SUB:
+			case ir_gen.SUB:
 				{
 
 				}
-			case MUL:
+			case ir_gen.MUL:
 				{
-					if code.Right_Operand1.Type == Int {
-						if code.Right_Operand2.Type == Int {
+					if code.Right_Operand1.Type == ir_gen.Int {
+						if code.Right_Operand2.Type == ir_gen.Int {
 							codes[i].Right_Operand1.Int = code.Right_Operand1.Int * code.Right_Operand2.Int
-						} else if code.Right_Operand2.Type == Float {
+						} else if code.Right_Operand2.Type == ir_gen.Float {
 							codes[i].Right_Operand1.Float = float64(code.Right_Operand1.Int) * code.Right_Operand2.Float
-							codes[i].Right_Operand1.Type = Float
+							codes[i].Right_Operand1.Type = ir_gen.Float
 						}
 					}
 
 				}
-			case DIV:
+			case ir_gen.DIV:
 				{
 
 				}
 
 			}
-			codes[i].Op = NONE
+			codes[i].Op = ir_gen.NONE
 		}
 	}
 
