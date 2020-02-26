@@ -16,6 +16,8 @@ const (
 	SUB
 	MUL
 	DIV
+	EQUAL
+	LT
 	NONE
 )
 
@@ -30,6 +32,9 @@ func (e Operator) String() string {
 		return "*"
 	case DIV:
 		return "/"
+	case EQUAL:
+		return "=="
+
 	case NONE:
 		return ""
 	default:

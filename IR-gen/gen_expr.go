@@ -4,7 +4,23 @@ import (
 	"github.com/KazumaTakata/static-typed-language/parser"
 )
 
-func Gen_IR_Expr(cmp parser.Cmp_expr) {
+func Gen_IR_Cmp(cmp parser.Cmp_expr) []IR_Code {
+
+	if cmp.Right == nil {
+		codes, _ := Gen_IR_Arith(*cmp.Left)
+		return codes
+	}
+
+	left_codes, left_operand := Gen_IR_Arith(*cmp.Left)
+
+	right_codes, right_operand := Gen_IR_Arith(*cmp.Right)
+
+	code, _ := Gen_IR_Binary(left_operand, right_operand, EQUAL)
+
+	codes := append(left_codes, right_codes...)
+	codes = append(codes, code)
+
+	return codes
 }
 
 func Gen_IR_Arith(arith parser.Arith_expr) ([]IR_Code, Operand) {

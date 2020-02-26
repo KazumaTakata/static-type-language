@@ -29,37 +29,10 @@ func run_program(input []byte) {
 	parser_input := parser.Parser_Input{Tokens: tokens, Pos: 0}
 	stmts := parser.Parse_Stmts(&parser_input)
 
-	codes, _ := Gen_IR_Arith(*stmts[0].Expr)
-	availables := Get_Available(codes)
+	codes := Gen_IR_Stmts(stmts)
 
-	Copy_Propagation(codes, availables)
-
-	eliminated := Dead_Code_Elimination(codes)
-
-	Constant_Folding(eliminated)
-
-	availables = Get_Available(eliminated)
-
-	Copy_Propagation(eliminated, availables)
-
-	eliminated = Dead_Code_Elimination(eliminated)
-
-	availables = Get_Available(eliminated)
-
-	Common_Subexpression_Elimination(eliminated, availables)
-
-	for _, code := range eliminated {
+	for _, code := range codes {
 		fmt.Printf("%s\n", code.String())
-
 	}
-
-	//for _, available := range availables {
-	//fmt.Printf("{")
-	//for _, code := range available {
-	//fmt.Printf(" %s, ", code.String())
-	//}
-	//fmt.Printf("}\n")
-
-	/*}*/
 
 }
