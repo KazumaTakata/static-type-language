@@ -69,6 +69,10 @@ func (code *IR_Code) String() string {
 		{
 			return code.Right_Operand1.Str() + ":"
 		}
+	case Goto:
+		{
+			return space + "Goto " + code.Right_Operand1.Str()
+		}
 
 	}
 

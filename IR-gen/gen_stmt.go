@@ -61,6 +61,37 @@ func Gen_IR_Stmt(stmt parser.Stmt) []IR_Code {
 
 		}
 
+	case parser.FOR_STMT:
+		{
+			before_label := get_new_label_name()
+			after_label := get_new_label_name()
+			label_code := IR_Code{Type: Label, Right_Operand1: Operand{Type: String, String: before_label}}
+
+			if stmt.For.Type == parser.Cmp {
+
+				cmp_codes := Gen_IR_Cmp(stmt.For.Cmp_expr)
+
+				if_code := IR_Code{Type: Ifz, Right_Operand1: cmp_codes[len(cmp_codes)-1].Left_Operand, Right_Operand2: Operand{Type: String, String: after_label}}
+
+				stmts_codes := Gen_IR_Stmts(stmt.For.Stmts)
+
+				goto_code := IR_Code{Type: Goto, Right_Operand1: Operand{Type: String, String: before_label}}
+
+				after_label_code := IR_Code{Type: Label, Right_Operand1: Operand{Type: String, String: after_label}}
+
+				codes := []IR_Code{label_code}
+				codes = append(codes, cmp_codes...)
+				codes = append(codes, if_code)
+				codes = append(codes, stmts_codes...)
+				codes = append(codes, goto_code)
+				codes = append(codes, after_label_code)
+
+				return codes
+
+			}
+
+		}
+
 	}
 
 	return []IR_Code{}
